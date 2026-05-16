@@ -1,4 +1,4 @@
-# 📋 Backlog Management Workflow (Gerenciamento de Backlog Obrigatório)
+﻿# 📋 Backlog Management Workflow (Gerenciamento de Backlog Obrigatório)
 
 > ## ⛔ REGRA ABSOLUTA — VÁLIDA PARA TODOS OS MODELOS (GPT, Claude, Gemini, etc.)
 >
@@ -109,6 +109,61 @@ Solicitação recebida
 
 ---
 
+## 🗺️ Passo 1.5 — Plano de Ação Estruturado
+
+> **Obrigatório para toda nova solicitação.** Antes de criar qualquer Issue, a IA deve decompor o pedido em Issues atômicas, identificar dependências e organizar a execução em ondas paralelas.
+
+### Estrutura do Plano
+
+Apresentar ao usuário **antes de criar as Issues**:
+
+```
+📋 Plano de Ação — <Título resumido da solicitação>
+
+🌊 Onda 1 — Execução Paralela (sem dependências)
+┌─────────────────────────────────────────────────────────────────┐
+│ Issue A │ [BACKEND]  │ <Título>  │ Repo: <repo>     │ 🤖 Agente 1 │
+│ Issue B │ [FRONTEND] │ <Título>  │ Repo: <repo>     │ 🤖 Agente 2 │
+└─────────────────────────────────────────────────────────────────┘
+
+🌊 Onda 2 — Execução após Onda 1 (depende de A e/ou B)
+┌─────────────────────────────────────────────────────────────────┐
+│ Issue C │ [BACKEND]  │ <Título>  │ Depende de: A    │ 🤖 Agente 1 │
+│ Issue D │ [FRONTEND] │ <Título>  │ Depende de: B    │ 🤖 Agente 2 │
+└─────────────────────────────────────────────────────────────────┘
+
+🌊 Onda 3 — Execução após Onda 2
+┌─────────────────────────────────────────────────────────────────┐
+│ Issue E │ [BACKEND]  │ <Título>  │ Depende de: C, D │ 🤖 Agente 1 │
+└─────────────────────────────────────────────────────────────────┘
+
+📊 Resumo
+- Total de Issues   : <N>
+- Ondas de execução : <N>
+- Paralelismo       : <ex: "Onda 1 pode ter 2 agentes simultâneos">
+
+✅ Confirma o plano? Responda "sim" para criar as Issues, ou descreva ajustes.
+```
+
+### Regras de decomposição
+
+| Regra | Descrição |
+| ----- | --------- |
+| **Atômica** | Cada Issue deve ter escopo único e ser entregável independente dentro de sua onda |
+| **Dependência real** | Só marcar dependência se Issue B precisar do output técnico de Issue A (ex: endpoint criado no backend antes de consumir no frontend) |
+| **Paralelismo máximo** | Agrupar na mesma onda tudo que pode ser desenvolvido simultaneamente por agentes diferentes |
+| **Granularidade** | Preferir Issues menores e paralelas a Issues grandes e sequenciais |
+
+### Tipos de dependência entre Issues
+
+| Tipo de relação  | Quando usar                                                           | Relation-type DevOps |
+| ---------------- | --------------------------------------------------------------------- | -------------------- |
+| **Predecessor**  | Issue B só pode iniciar após Issue A estar em Review                  | `Predecessor`        |
+| **Related**      | Issues do mesmo contexto sem bloqueio técnico entre elas              | `Related`            |
+| **Duplicate**    | Issue duplicada de outra já existente                                 | `Duplicate`          |
+
+---
+
 ## 📝 Passo 2 — Criação Obrigatória de Issues no Azure DevOps
 
 > **Organização**: `https://dev.azure.com/LesteDevOps`
@@ -167,14 +222,29 @@ az boards work-item update \
 "System.Tags=Backend;<REPO_1>;<REPO_2>;<REPO_N>;<PALAVRA_CONTEXTO>"
 ```
 
-### 2.4 Vincular Issues (quando ambos os projetos são impactados)
+### 2.4 Vincular Issues — Related (mesmo contexto, sem bloqueio técnico)
 ```bash
 az devops work-item relation add \
-  --id <ID_ISSUE_BACKEND> \
-  --target-id <ID_ISSUE_FRONTEND> \
+  --id <ID_ISSUE_A> \
+  --target-id <ID_ISSUE_B> \
   --relation-type "Related" \
   --org "https://dev.azure.com/LesteDevOps"
 ```
+
+### 2.5 Vincular Issues — Predecessor (dependência bloqueante entre ondas)
+
+Usar quando Issue B só pode iniciar após Issue A estar concluída (ondas diferentes no plano):
+
+```bash
+# Issue B depende de Issue A (A é predecessor de B)
+az devops work-item relation add \
+  --id <ID_ISSUE_B> \
+  --target-id <ID_ISSUE_A> \
+  --relation-type "Predecessor" \
+  --org "https://dev.azure.com/LesteDevOps"
+```
+
+> Registrar **todas** as dependências do Plano de Ação (Passo 1.5) como relações `Predecessor` no DevOps imediatamente após criar as Issues, seguindo as ondas definidas no plano.
 
 ---
 
