@@ -99,7 +99,18 @@ az boards work-item show \
 ```
 Extrair: título, descrição, critérios de aceite, tags, projeto, comentários existentes.
 
-### 3.2 — Usar a branch de sessão
+### 3.2 — Garantir Test Plan e Test Cases
+
+Antes de implementar, garantir que a Issue tenha Test Cases vinculados no Test Plan da Iteration trimestral:
+
+- Criar/reutilizar Test Plan `<PROJECT_NAME> - <ITERATION_NAME>`.
+- Criar suite adequada (`Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke`).
+- Criar Test Cases a partir dos critérios de aceite, se ainda não existirem.
+- Vincular Test Cases à Issue.
+
+Seguir `ai_skills/workflows/test_plans.md`.
+
+### 3.3 — Usar a branch de sessão
 
 A branch é criada **uma única vez no início da sessão** e reutilizada por todas as Issues executadas no mesmo ciclo de trabalho. Se ainda não existir, criá-la agora.
 
@@ -111,7 +122,7 @@ git -C "<CAMINHO_PROJETO>" checkout $SESSION_BRANCH 2>/dev/null || \
 
 > `$SESSION_BRANCH` deve ser definido **uma única vez por sessão** com o formato `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`, onde o contexto é informado pelo usuário ou inferido pela IA a partir das Issues da sessão.
 
-### 3.3 — Mover para Doing + registrar Start DateTime exato
+### 3.4 — Mover para Doing + registrar Start DateTime exato
 ```bash
 START_DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -122,12 +133,23 @@ az boards work-item update \
   --fields "Microsoft.VSTS.Scheduling.StartDate=$START_DATETIME"
 ```
 
-### 3.4 — Implementar o que está descrito na Issue
+### 3.5 — Implementar o que está descrito na Issue
 - Seguir o escopo e critérios de aceite da descrição da Issue.
 - Aplicar os padrões de `ai_skills/tech_rules/` conforme o tipo de projeto.
 - **Postar na Discussion o espelho integral de tudo que for escrito no console** (ver `backlog_management.md` Passo 6).
 
-### 3.5 — Mover para Review + registrar Finish DateTime + campos de revisão
+### 3.6 — Validar Test Cases antes de Review
+
+Antes de mover para `Review`, registrar resultado dos Test Cases vinculados:
+
+| Resultado | Ação |
+| --------- | ---- |
+| `Passed` | Pode mover para `Review` |
+| `Failed` | Não mover para `Review`; registrar falha e corrigir/criar Issue relacionada |
+| `Blocked` | Não mover para `Review`; registrar bloqueio na Discussion |
+| `Not Run` | Registrar justificativa e deixar explícito no comentário final |
+
+### 3.7 — Mover para Review + registrar Finish DateTime + campos de revisão
 ```bash
 FINISH_DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -143,7 +165,7 @@ az boards work-item update \
     "Microsoft.VSTS.Common.RequiresReview=Yes"
 ```
 
-### 3.6 — Comentário de Encerramento (espelho integral do resumo do console)
+### 3.8 — Comentário de Encerramento (espelho integral do resumo do console)
 ```bash
 az boards work-item update \
   --id <ID_ISSUE> \
@@ -158,6 +180,13 @@ az boards work-item update \
 
 ### Testes
 <Output completo dos testes>
+
+### Test Plans
+- Test Plan: <PROJECT_NAME> - <ITERATION_NAME>
+- Suites: <Backend | Frontend | Integracao | Regressao | Smoke>
+- Test Cases: #<ID_1>, #<ID_2>
+- Resultado: <Passed | Failed | Blocked | Not Run>
+- Evidências: <logs, outputs, prints, links ou justificativa>
 
 ### Decisões técnicas
 <Justificativas e trade-offs>

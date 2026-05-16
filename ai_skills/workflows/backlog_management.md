@@ -4,11 +4,12 @@
 >
 > **Criar Issues no Azure DevOps é OBRIGATÓRIO e AUTOMÁTICO para TODA solicitação.**
 > **Mover Issues no kanban é OBRIGATÓRIO e AUTOMÁTICO a cada transição de estado.**
+> **Criar/reutilizar Test Plan e Test Cases é OBRIGATÓRIO para cada Iteration/Issue.**
 > **PROIBIDO** pedir confirmação para criar Issues: "posso criar?", "deseja que eu crie?", ou qualquer variação.
 > **PROIBIDO** pedir confirmação para mover Issues: "posso mover para Doing?", "confirma a movimentação?", ou qualquer variação.
 > **PROIBIDO** iniciar qualquer implementação sem ter criado as Issues primeiro.
 > **PROIBIDO** justificar a não-criação com frases como "vou direto ao código", "para agilizar", "pulando o backlog".
-> A criação de Issues, movimentação no kanban e criação de branches acontece **sempre, imediatamente e sem aprovação prévia**.
+> A criação de Issues, Test Plans/Test Cases, movimentação no kanban e criação de branches acontece **sempre, imediatamente e sem aprovação prévia**.
 
 ---
 
@@ -163,6 +164,36 @@ done
 
 > **Sem confirmação**: a criação da Iteration e a movimentação das Issues em `Backlog`/`To Do` são automáticas.
 > **Escopo**: não mover Issues em `Doing`, `Review` ou `Done`.
+
+---
+
+## 🧪 Passo 0.6 — Criar/Reutilizar Test Plan da Iteration
+
+> **Executar sempre que uma nova sessão ou branch for iniciada**, após criar/atualizar a Iteration trimestral.
+
+Para cada projeto impactado, criar ou reutilizar um Test Plan no formato:
+
+```text
+<PROJECT_NAME> - <ITERATION_NAME>
+```
+
+Exemplo:
+
+```text
+Sentinel.Frontend - 2026.Q2
+```
+
+Regras:
+
+| Item | Regra |
+| ---- | ----- |
+| Test Plan | 1 por projeto e por Iteration trimestral |
+| Suites | `Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke` conforme o plano de ação |
+| Test Cases | Criados a partir dos critérios de aceite de cada Issue |
+| Rastreabilidade | Cada Test Case deve ser vinculado à Issue correspondente |
+| Review | A Issue só pode ir para `Review` com resumo de Test Plan/Test Cases no comentário final |
+
+Seguir integralmente `ai_skills/workflows/test_plans.md`.
 
 ---
 
@@ -351,6 +382,22 @@ az devops work-item relation add \
 ```
 
 > Registrar **todas** as dependências do Plano de Ação (Passo 1.5) como relações `Predecessor` no DevOps imediatamente após criar as Issues, seguindo as ondas definidas no plano.
+
+### 2.6 Criar Test Cases vinculados às Issues
+
+Após criar as Issues e registrar dependências, criar Test Cases no Test Plan da Iteration trimestral:
+
+```text
+Issue #<ID> → Test Case(s) #<ID_TEST_CASE>
+```
+
+Regras:
+- Gerar pelo menos 1 Test Case por critério de aceite relevante.
+- Vincular cada Test Case à Issue com relação `Related`.
+- Adicionar os Test Cases à suite apropriada (`Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke`).
+- Registrar no comentário da Issue os IDs dos Test Cases criados.
+
+Seguir `ai_skills/workflows/test_plans.md` Passos 3 e 4.
 
 ---
 

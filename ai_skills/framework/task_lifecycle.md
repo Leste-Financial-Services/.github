@@ -7,6 +7,7 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 - **PROIBIDO** pedir confirmação para criar Issues ou mover estados no kanban.
 - **PROIBIDO** perguntar "posso mover para Doing?", "confirma que posso avançar?", "devo mover para Review?".
 - **PROIBIDO** perguntar antes de criar Iteration trimestral ou mover Issues em `Backlog`/`To Do` para a Iteration atual.
+- **PROIBIDO** mover Issue para `Review` sem registrar Test Plan/Test Cases/evidências, salvo se Test Plans estiver indisponível e o bloqueio estiver documentado na Discussion.
 - **PROIBIDO** aguardar input do usuário entre as transições de estado.
 - Todas as movimentações são **automáticas, imediatas e silenciosas** — o usuário é apenas informado no resumo.
 
@@ -34,7 +35,14 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Não mover Issues em `Doing`, `Review` ou `Done`.
    - Seguir `ai_skills/workflows/backlog_management.md` Passo 0.5.
 
-5. **Fluxo de Estados — Sequencial, Obrigatório e Automático**:
+5. **Test Plans — Obrigatório por Iteration**:
+   - Criar/reutilizar Test Plan no formato `<PROJECT_NAME> - <ITERATION_NAME>`.
+   - Criar suites conforme o plano: `Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke`.
+   - Criar Test Cases a partir dos critérios de aceite e vincular às Issues.
+   - Registrar Test Plan, suites, Test Cases e resultado no comentário final antes de mover para `Review`.
+   - Seguir `ai_skills/workflows/test_plans.md`.
+
+6. **Fluxo de Estados — Sequencial, Obrigatório e Automático**:
 
    ```
    Backlog ──► To Do ──► Doing ──► Review
@@ -50,12 +58,12 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
    > A IA **NUNCA** move para `Done` e **NUNCA** pergunta antes de mover.
 
-6. **Datas com Datetime Exato — Obrigatórias**:
+7. **Datas com Datetime Exato — Obrigatórias**:
    - **Start Date**: capturado no momento **exato** em que a Issue é movida para `Doing` (formato `YYYY-MM-DDTHH:MM:SSZ`).
    - **Finish Date**: capturado no momento **exato** em que a Issue é movida para `Review` (formato `YYYY-MM-DDTHH:MM:SSZ`).
    - **Completed Work**: total de tokens consumidos (entrada + saída) em toda a execução.
 
-7. **Discussion — Espelho Integral do Console (MANDATO ABSOLUTO)**:
+8. **Discussion — Espelho Integral do Console (MANDATO ABSOLUTO)**:
    - **TODO** o texto que a IA escreve no console **DEVE** ser postado integralmente na Discussion.
    - Inclui: análises, código gerado, outputs de comandos, logs, erros e como foram resolvidos.
    - **Proibido** resumir, filtrar ou omitir qualquer parte.
@@ -63,12 +71,13 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Ao finalizar → **Comentário de Encerramento** com tudo que foi implementado (arquivos, commits, decisões, métricas).
    - Consultar `ai_skills/workflows/backlog_management.md` (Passo 6) para templates e momentos obrigatórios.
 
-8. **Rastreabilidade**:
+9. **Rastreabilidade**:
    - Branch: `session/<YYYYMMDD>-<LOGIN>-<contexto>` — uma branch por sessão, compartilhada por todas as Issues (ver `backlog_management.md` Passo 3).
    - Commits: referenciar o ID da Issue (`#ID`).
+   - Test Cases: vincular cada Test Case à Issue correspondente.
    - Push ao final de cada atividade concluída.
 
-9. **Campos Técnicos Obrigatórios**:
+10. **Campos Técnicos Obrigatórios**:
    - **Activity**: `Deployment`, `Design`, `Development`, `Documentation`, `Requirements` ou `Testing`.
    - **Effort**: estimativa inicial em horas.
 
@@ -84,6 +93,9 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 - [ ] `Assign` alterado para `<NOME_REVISOR>`.
 - [ ] `Reviewed By` = `<NOME_REVISOR>`.
 - [ ] `Required Review` = `Yes`.
+- [ ] Test Plan da Iteration existe ou bloqueio foi documentado.
+- [ ] Test Cases foram criados/vinculados ou justificativa foi registrada.
+- [ ] Resultado dos Test Cases/evidências incluído no comentário final.
 - [ ] Push realizado em todos os repositórios afetados.
 - [ ] Estado = `Review`.
 
@@ -121,7 +133,14 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Não mover Issues em `Doing`, `Review` ou `Done`.
    - Seguir `ai_skills/workflows/backlog_management.md` Passo 0.5.
 
-5. **Fluxo de Estados — Sequencial e Obrigatório**:
+5. **Test Plans — Obrigatório por Iteration**:
+   - Criar/reutilizar Test Plan no formato `<PROJECT_NAME> - <ITERATION_NAME>`.
+   - Criar suites conforme o plano: `Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke`.
+   - Criar Test Cases a partir dos critérios de aceite e vincular às Issues.
+   - Registrar Test Plan, suites, Test Cases e resultado no comentário final antes de mover para `Review`.
+   - Seguir `ai_skills/workflows/test_plans.md`.
+
+6. **Fluxo de Estados — Sequencial e Obrigatório**:
 
    ```
    Backlog ──► To Do ──► Doing ──► Review
@@ -137,23 +156,24 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
    > A IA **NUNCA** move para `Done`.
 
-6. **Datas e Métricas — Obrigatórias**:
+7. **Datas e Métricas — Obrigatórias**:
    - **Start Date** (`Microsoft.VSTS.Scheduling.StartDate`): preencher ao mover para `Doing`.
    - **Finish Date** (`Microsoft.VSTS.Scheduling.FinishDate`): preencher ao mover para `Review`.
    - **Completed Work** (`Microsoft.VSTS.Scheduling.CompletedWork`): preencher com o **total de tokens consumidos** (entrada + saída) durante toda a execução da Issue.
 
-7. **Discussion — Comentários Incrementais Obrigatórios**:
+8. **Discussion — Comentários Incrementais Obrigatórios**:
    - A cada nova etapa executada → novo comentário na Discussion.
    - **Nunca editar** comentários anteriores — são registros imutáveis de evidência.
    - Ao finalizar → adicionar o **Comentário de Encerramento** com resumo completo do que foi entregue.
    - Consultar `ai_skills/workflows/backlog_management.md` (Passo 6) para templates.
 
-8. **Rastreabilidade**:
+9. **Rastreabilidade**:
    - Branch: `session/<YYYYMMDD>-<LOGIN>-<contexto>` — uma branch por sessão, compartilhada por todas as Issues (ver `backlog_management.md` Passo 3).
    - Commits: mensagem deve referenciar o ID da Issue (`#ID`).
+   - Test Cases: vincular cada Test Case à Issue correspondente.
    - Push ao final de cada atividade concluída.
 
-9. **Campos Técnicos Obrigatórios**:
+10. **Campos Técnicos Obrigatórios**:
    - **Activity**: `Deployment`, `Design`, `Development`, `Documentation`, `Requirements` ou `Testing`.
    - **Effort**: estimativa inicial em horas.
 
@@ -167,6 +187,9 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 - [ ] `Finish Date` preenchido com a data de conclusão.
 - [ ] `Completed Work` preenchido com o total de tokens utilizados.
 - [ ] `Activity` e `Effort` preenchidos.
+- [ ] Test Plan da Iteration existe ou bloqueio foi documentado.
+- [ ] Test Cases foram criados/vinculados ou justificativa foi registrada.
+- [ ] Resultado dos Test Cases/evidências incluído no comentário final.
 - [ ] Push realizado para o remoto em todos os repositórios afetados.
 - [ ] Estado alterado para `Review`.
 
