@@ -493,14 +493,18 @@ az boards work-item update \
 ## 💬 Passo 6 — Discussion: Espelho Integral do Console
 
 > **MANDATO ABSOLUTO**: Todo texto que a IA escreve no console **DEVE** ser postado integralmente na Discussion da Issue correspondente.
+> Para o GitHub Copilot CLI, isso significa **todo texto gerado pelo Copilot na CLI**: preambulos, analises, avisos, decisoes, perguntas, respostas, resultados finais e mensagens de erro.
 > Isso inclui: análises, decisões técnicas, código gerado, outputs de comandos, logs, erros encontrados e como foram resolvidos, e o resumo final.
 > **Proibido resumir, filtrar ou omitir** qualquer parte do conteúdo do console.
+> A mem├│ria local (`./memory/`) deve registrar as IDs das Issues e os principais coment├írios/textos escritos pelo GitHub Copilot CLI; a Issue deve conter o texto integral.
 
 ### Regras de Postagem
 
 1. **Espelho integral**: O comentário é uma cópia exata do que foi escrito no console naquela etapa.
 2. **Incremental**: Cada etapa gera um novo comentário — nunca editar anteriores.
 3. **Timestamp exato**: Usar o datetime real do momento do post (`YYYY-MM-DDTHH:MM:SS`).
+4. **Sem perda entre CLI e Issue**: Antes de concluir, comparar os textos escritos pelo GitHub Copilot CLI durante a atividade com os comentários da Discussion e postar qualquer trecho ausente.
+5. **Mem├│ria vinculada**: Registrar no diário `./memory/{yyyy-MM-dd}.md` as IDs das Issues e os principais comentários da IA na CLI, indicando que o espelho integral foi publicado na Issue.
 
 ### Comando padrão de comentário
 ```bash
@@ -526,6 +530,8 @@ az boards work-item update \
 | 6 | Testes executados                 | Output completo dos testes (passou/falhou, cobertura, erros)        |
 | 7 | Commit/Push realizado             | Hash do commit, mensagem, branch, repositório de destino            |
 | 8 | Issue finalizada (→ Review)       | **Comentário de Encerramento** — template abaixo                    |
+
+> Se a atividade impactar múltiplas Issues, postar o texto integral em cada Issue relevante ou, quando o conteúdo for específico de uma Issue, postar no respectivo item e registrar a distribuição na memória.
 
 ### Template do Comentário de Encerramento (obrigatório ao mover para Review)
 ```bash

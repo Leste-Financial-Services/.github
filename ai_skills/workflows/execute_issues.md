@@ -136,7 +136,8 @@ az boards work-item update \
 ### 3.5 — Implementar o que está descrito na Issue
 - Seguir o escopo e critérios de aceite da descrição da Issue.
 - Aplicar os padrões de `ai_skills/tech_rules/` conforme o tipo de projeto.
-- **Postar na Discussion o espelho integral de tudo que for escrito no console** (ver `backlog_management.md` Passo 6).
+- **Postar na Discussion o espelho integral de tudo que o GitHub Copilot CLI escrever na CLI** (ver `backlog_management.md` Passo 6).
+- Registrar em `./memory/{yyyy-MM-dd}.md` a ID da Issue e os principais comentários/textos da IA na CLI, confirmando que o espelho integral foi publicado na Discussion.
 
 ### 3.6 — Validar Test Cases antes de Review
 

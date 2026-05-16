@@ -52,6 +52,8 @@ Executar **AP├ôS** concluir cada solicita├º├úo do usu├írio.
 > **IMPORTANTE**: N├úo registre apenas INPUT ÔåÆ OUTPUT.
 > Registre **TODO o processo**: o racioc├¡nio, as escolhas do usu├írio durante a execu├º├úo,
 > os coment├írios da IA sobre decis├Áes, mudan├ºas de rumo, intera├º├Áes relevantes.
+> A mem├│ria deve incluir as IDs das Issues relacionadas e os principais textos/coment├írios que o GitHub Copilot CLI escreveu durante a execu├º├úo.
+> A Issue no Azure DevOps deve receber o espelho integral de **todos** os textos escritos pelo GitHub Copilot CLI, sem resumo ou omiss├úo.
 
 ```
 1. Determinar a data atual: yyyy-MM-dd
@@ -86,7 +88,7 @@ Executar **AP├ôS** concluir cada solicita├º├úo do usu├írio.
 ## [N] {HH:mm} ÔÇö {T├¡tulo curto do pedido}
 
 ### ­ƒÄ½ Issue
-- **ID**: #{numero} (ou "Criada: #{numero}" se a IA criou nesta atividade)
+- **IDs**: #{numero1}, #{numero2} (ou "Criada: #{numero}" se a IA criou nesta atividade)
 - **T├¡tulo**: {t├¡tulo da issue/task no Azure DevOps}
 - **URL**: {link para a issue}
 > Se n├úo houver issue, registrar: "N/A ÔÇö motivo"
@@ -110,6 +112,11 @@ Registro cronol├│gico de tudo que aconteceu DURANTE a execu├º├úo:
 > Registre TODAS as intera├º├Áes relevantes, n├úo apenas o pedido inicial e resultado final.
 > Isso inclui: escolhas do usu├írio na interface, coment├írios da IA sobre o que encontrou,
 > decis├Áes de arquitetura, problemas descobertos, alertas dados, etc.
+
+### ­ƒûÑ Coment├írios do GitHub Copilot CLI
+- **Principais textos escritos pela IA na CLI**: {lista cronol├│gica dos principais pre├ómbulos, an├ílises, decis├Áes, alertas, bloqueios e resultado final}
+- **Status do espelho na Issue**: {Confirmar que o texto integral escrito na CLI foi postado na Discussion da(s) Issue(s), com IDs dos coment├írios/links quando dispon├¡vel}
+- **Observa├º├úo**: A mem├│ria pode resumir os principais coment├írios para contexto futuro; a Issue deve conter o texto integral, sem resumo.
 
 ### ÔÜÖ´©Å Execu├º├úo
 - **Arquivos criados**: {lista}
@@ -258,7 +265,9 @@ Quando o usu├írio pedir informa├º├Áes hist├│ricas:
 - **Decis├Áes Permanentes nunca s├úo removidas** ÔÇö apenas marcadas como [REVOGADA] se mudarem
 - **Append-only** dentro do dia (nunca editar entradas passadas do dia)
 - Registrar **hor├írio** de cada pedido e intera├º├úo
-- Registrar **issues** sempre (a IA ├® obrigada a criar issue antes de executar)
+- Registrar **IDs das issues** sempre (a IA ├® obrigada a criar issue antes de executar)
+- Registrar na mem├│ria os **principais coment├írios/textos do GitHub Copilot CLI** escritos durante a atividade
+- Garantir que a **Issue recebeu todos os textos escritos pelo GitHub Copilot CLI na CLI**, integralmente e sem resumo
 - Registrar o **COMO**, n├úo s├│ o IN/OUT ÔÇö escolhas, racioc├¡nio, mudan├ºas de rumo
 - Na d├║vida sobre contexto passado, **SEMPRE consultar `_summary.md` primeiro**
 - Se `./memory/` n├úo existir, **criar automaticamente**

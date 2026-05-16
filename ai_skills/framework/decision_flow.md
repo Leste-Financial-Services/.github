@@ -118,3 +118,9 @@ Deseja realizar um Refactoring para adequar ao padrão antes de prosseguir?
 ## 5. Validação de Barreiras
 - Antes de apresentar o resultado, validar contra as regras em `ai_skills/validation/forbidden.md`.
 - Garantir que todos os `Must Have` em `ai_skills/validation/must_have.md` foram atendidos.
+- Criar o `.gitignore` se ele não existir e garantir padrões para segredos locais, build outputs, caches, dependências, logs, arquivos temporários e arquivos de IDE/SO.
+- Antes de commitar, validar que nenhum artefato gerado, pasta de dependência, cache, log ou arquivo local entrou no índice Git.
+- Antes de commitar, validar que arquivos locais de desenvolvimento com segredos estão cobertos pelo `.gitignore`.
+- Se arquivo versionável contiver senha, token, connection string, API key, chave de cloud ou credencial real, bloquear a conclusão e mover o valor para Key Vault, variável de ambiente, variável secreta de pipeline ou solução equivalente.
+- Para qualquer API/endpoint novo ou alterado, confirmar que todos os endpoints exigem autenticação/autorização e que existe validação de acesso sem credencial válida (`401` ou `403`).
+- Se um endpoint for intencionalmente anônimo, bloquear a conclusão até que a exceção esteja justificada na Issue, documentada no Scalar e limitada ao mínimo necessário.

@@ -65,10 +65,12 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
 8. **Discussion — Espelho Integral do Console (MANDATO ABSOLUTO)**:
    - **TODO** o texto que a IA escreve no console **DEVE** ser postado integralmente na Discussion.
+   - Para GitHub Copilot CLI, isso inclui **todo texto gerado pelo Copilot na CLI**: preambulos, analises, decisoes, avisos, perguntas, respostas, resultados finais e mensagens de erro.
    - Inclui: análises, código gerado, outputs de comandos, logs, erros e como foram resolvidos.
    - **Proibido** resumir, filtrar ou omitir qualquer parte.
    - Cada etapa gera um novo comentário com timestamp exato — nunca editar anteriores.
    - Ao finalizar → **Comentário de Encerramento** com tudo que foi implementado (arquivos, commits, decisões, métricas).
+   - A mem├│ria local deve registrar IDs das Issues e os principais comentários/textos do GitHub Copilot CLI, confirmando que o espelho integral foi publicado na Issue.
    - Consultar `ai_skills/workflows/backlog_management.md` (Passo 6) para templates e momentos obrigatórios.
 
 9. **Rastreabilidade**:
@@ -86,6 +88,8 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 ## 📋 Checklist de Finalização (Antes de mover para Review)
 
 - [ ] Todos os comentários incrementais (espelho do console) na Discussion.
+- [ ] Todo texto gerado pelo GitHub Copilot CLI na CLI foi postado integralmente na Discussion da(s) Issue(s).
+- [ ] Memória local registra IDs das Issues e principais comentários/textos da IA na CLI.
 - [ ] Comentário de Encerramento com lista completa do que foi implementado.
 - [ ] `Start Date` = datetime exato da transição para Doing.
 - [ ] `Finish Date` = datetime exato da transição para Review.
@@ -96,6 +100,13 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 - [ ] Test Plan da Iteration existe ou bloqueio foi documentado.
 - [ ] Test Cases foram criados/vinculados ou justificativa foi registrada.
 - [ ] Resultado dos Test Cases/evidências incluído no comentário final.
+- [ ] `.gitignore` existe e cobre build outputs, caches, dependências, logs, temporários e arquivos de IDE/SO.
+- [ ] Nenhum artefato gerado, pasta de dependência, cache, log ou arquivo local foi incluído no commit.
+- [ ] `.gitignore` cobre arquivos locais de desenvolvimento com segredos.
+- [ ] Arquivos versionáveis não contêm credenciais reais; usam Key Vault, variáveis de ambiente, variáveis secretas de pipeline ou placeholders.
+- [ ] APIs/endpoints novos ou alterados exigem autenticação/autorização.
+- [ ] Teste/cenário de acesso sem credencial válida retorna `401` ou `403`.
+- [ ] Endpoint anônimo, se existir, está justificado na Issue, documentado no Scalar e limitado ao mínimo necessário.
 - [ ] Push realizado em todos os repositórios afetados.
 - [ ] Estado = `Review`.
 

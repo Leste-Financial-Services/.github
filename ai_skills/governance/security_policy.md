@@ -5,6 +5,8 @@ Garante a proteção de recursos e dados em todo o ecossistema.
 ## 1. Secrets Management
 - **Azure Key Vault**: Principal provedor de segredos. **NUNCA** armazene segredos em código ou arquivos locais.
 - **Managed Identity**: Utilize identidades gerenciadas para autenticação automática entre recursos Azure.
+- **Git Ignore Mandatório**: Arquivos locais de desenvolvimento que possam conter usuário, senha, connection string, token, API key, chave de cloud ou credencial devem estar no `.gitignore` antes de qualquer alteração ou commit.
+- **Segredos Fora do Repositório**: Configurações versionáveis não podem conter credenciais reais. Quando uma credencial aparecer em arquivo não local, a IA deve interromper e substituir por Azure Key Vault, variável de ambiente, variável secreta de pipeline ou solução equivalente, questionando o usuário se houver decisão de arquitetura/infraestrutura.
 
 ## 2. Autenticação e Autorização (Auth)
 - **Azure Entra ID (AD)**: Padronizar autenticação via Microsoft.
