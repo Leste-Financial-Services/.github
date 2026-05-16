@@ -12,8 +12,8 @@ Define o padrão de documentação para código e APIs.
 
 ## 3. Banco de Dados (SQL Scripts)
 - **Scripts**: Numerados e datados em `scripts/sql/`.
-- **Cabeçalho**: Comentários no topo do script descrevendo a Issue ID e o objetivo comercial.
+- **Cabeçalho**: Comentários no topo do script descrevendo a Task ID e o objetivo comercial.
 
 ## 4. Repositórios (Git)
-- **Commits**: Mensagens estruturadas incluindo o ID da Issue.
+- **Commits**: Mensagens estruturadas incluindo o ID da Task.
 - **README**: Arquivos README devem ser atualizados em cada projeto/repositório.

@@ -12,4 +12,4 @@ Define as regras de conformidade e auditoria técnica.
 - Campos de auditoria em banco: `created_at`, `updated_at`, `created_by`, `updated_by`.
 
 ## 3. Conformidade DevOps
-- Toda implementação vinculada a um ID de Issue ativo em `https://dev.azure.com/LesteDevOps/IAProjects`.
+- Toda implementação vinculada a um ID de Task ativo em `https://dev.azure.com/LesteDevOps/IAProjects`.

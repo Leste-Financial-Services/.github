@@ -4,7 +4,7 @@ Define quando a IA deve interromper e solicitar intervenção humana imediata.
 
 ## 1. Ambiguidade Técnica
 - Quando houver conflitos entre regras em `tech_rules/` e restrições em `system_knowledge/`.
-- Quando o escopo da Issue for impreciso ou não possuir critérios de aceite claros.
+- Quando o escopo da Task for impreciso ou não possuir critérios de aceite claros.
 
 ## 2. Risco de Segurança ou Integridade
 - Antes de gerar código que exclua ou modifique registros financeiros críticos.
