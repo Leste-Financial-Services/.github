@@ -24,13 +24,14 @@ Define o processo de raciocínio lógico que a IA deve seguir para cada solicita
 Se o usuário solicitar execução de Issues já existentes (ex: "execute a Issue #X", "execute as Issues em To Do"), **não criar novas Issues** — seguir diretamente `ai_skills/workflows/execute_issues.md`.
 
 ### Criação de novas Issues (fluxo padrão)
-1. Executar o workflow `ai_skills/workflows/backlog_management.md` na íntegra.
-2. Identificar quais projetos são impactados: **Backend**, **Frontend** ou **Ambos**.
-3. Detectar automaticamente o email do revisor via `az account show` (ver Seção 1.0) — sem perguntar ao usuário.
-4. Criar a(s) Issue(s) no Azure DevOps — **imediatamente, sem aguardar confirmação**.
-5. Criar a(s) branch(es) em cada projeto impactado — **imediatamente, sem aguardar confirmação**.
-6. Vincular as Issues entre projetos quando ambos forem impactados.
-7. Apresentar o resumo ao usuário e iniciar a implementação.
+1. Executar **Passo 0** de `ai_skills/workflows/backlog_management.md` — consultar Issues abertas em `To Do` e perguntar se alguma deve ser incluída na sessão.
+2. Executar o restante do workflow `ai_skills/workflows/backlog_management.md` na íntegra.
+3. Identificar quais projetos são impactados: **Backend**, **Frontend** ou **Ambos**.
+4. Detectar automaticamente o email do revisor via `az account show` (ver Seção 1.0) — sem perguntar ao usuário.
+5. Criar a(s) Issue(s) no Azure DevOps — **imediatamente, sem aguardar confirmação**.
+6. Criar a(s) branch(es) em cada projeto impactado — **imediatamente, sem aguardar confirmação**.
+7. Vincular as Issues entre projetos quando ambos forem impactados.
+8. Apresentar o resumo ao usuário e iniciar a implementação.
 
 > **Bloqueio**: Se não houver URL de Azure DevOps configurada (`[MISSING]`), interromper e solicitar configuração.
 

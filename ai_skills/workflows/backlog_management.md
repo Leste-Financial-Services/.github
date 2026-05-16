@@ -12,6 +12,54 @@
 
 ---
 
+## 🔎 Passo 0 — Verificar Issues Abertas em To Do (Início de Sessão)
+
+> **Executar sempre que uma nova sessão ou branch for iniciada**, antes de criar novas Issues.
+
+### Buscar Issues existentes em To Do atribuídas à Celeste
+
+```bash
+az boards query \
+  --wiql "SELECT [System.Id], [System.Title], [System.TeamProject], [System.Tags]
+          FROM WorkItems
+          WHERE [System.WorkItemType] = 'Issue'
+            AND [System.State] = 'To Do'
+            AND [System.AssignedTo] = 'celeste@leste.com'
+          ORDER BY [System.CreatedDate] ASC" \
+  --org "https://dev.azure.com/LesteDevOps" \
+  -o json
+```
+
+### Apresentar ao usuário e perguntar se devem ser incluídas
+
+Se houver Issues em `To Do`, exibir antes de prosseguir:
+
+```
+📋 Issues abertas em To Do (atribuídas à Celeste):
+
+| #  | Issue ID | Projeto      | Título                            | Tags                     |
+|----|----------|--------------|-----------------------------------|--------------------------|
+| 1  | #XXXX    | <PROJETO>    | <Título da Issue>                 | <Tags>                   |
+| 2  | #YYYY    | <PROJETO>    | <Título da Issue>                 | <Tags>                   |
+
+➕ Deseja incluir alguma dessas Issues na sessão atual?
+   Informe os números (ex: "1, 3") ou "nenhuma" para continuar apenas com a solicitação atual.
+```
+
+> **Esta é a ÚNICA pergunta permitida nesta etapa.** Após a resposta, prosseguir imediatamente.
+
+### Regras de inclusão
+
+| Resposta do usuário    | Comportamento                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| Números (ex: "1, 2")   | Adicionar as Issues selecionadas à fila de execução da sessão                 |
+| "todas" / "all"        | Incluir todas as Issues listadas                                              |
+| "nenhuma" / "não" / "" | Ignorar a lista e prosseguir apenas com a solicitação atual                   |
+
+> Se **não houver** Issues em `To Do`, pular este passo silenciosamente e continuar.
+
+---
+
 ## 🔍 Passo 1 — Análise de Impacto por Projeto
 
 Para cada solicitação, a IA deve categorizar o impacto:
