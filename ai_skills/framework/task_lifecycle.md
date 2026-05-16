@@ -6,6 +6,7 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
 - **PROIBIDO** pedir confirmação para criar Issues ou mover estados no kanban.
 - **PROIBIDO** perguntar "posso mover para Doing?", "confirma que posso avançar?", "devo mover para Review?".
+- **PROIBIDO** perguntar antes de criar Iteration trimestral ou mover Issues em `Backlog`/`To Do` para a Iteration atual.
 - **PROIBIDO** aguardar input do usuário entre as transições de estado.
 - Todas as movimentações são **automáticas, imediatas e silenciosas** — o usuário é apenas informado no resumo.
 
@@ -27,7 +28,13 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Uma tag de **contexto** com palavra-chave da atividade (ex: `CriacaoEndpoint`, `CorrecaoBug`, `RefatoracaoAuth`).
    - Tag de tipo: `Backend` ou `Frontend`.
 
-4. **Fluxo de Estados — Sequencial, Obrigatório e Automático**:
+4. **Iteration Trimestral — Obrigatória e Automática**:
+   - Ao iniciar sessão/branch, garantir a Iteration trimestral do projeto no formato `YYYY.QN` (ex: `2026.Q2`).
+   - Mover automaticamente Issues em `Backlog` e `To Do` para a Iteration atual.
+   - Não mover Issues em `Doing`, `Review` ou `Done`.
+   - Seguir `ai_skills/workflows/backlog_management.md` Passo 0.5.
+
+5. **Fluxo de Estados — Sequencial, Obrigatório e Automático**:
 
    ```
    Backlog ──► To Do ──► Doing ──► Review
@@ -43,12 +50,12 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
    > A IA **NUNCA** move para `Done` e **NUNCA** pergunta antes de mover.
 
-5. **Datas com Datetime Exato — Obrigatórias**:
+6. **Datas com Datetime Exato — Obrigatórias**:
    - **Start Date**: capturado no momento **exato** em que a Issue é movida para `Doing` (formato `YYYY-MM-DDTHH:MM:SSZ`).
    - **Finish Date**: capturado no momento **exato** em que a Issue é movida para `Review` (formato `YYYY-MM-DDTHH:MM:SSZ`).
    - **Completed Work**: total de tokens consumidos (entrada + saída) em toda a execução.
 
-6. **Discussion — Espelho Integral do Console (MANDATO ABSOLUTO)**:
+7. **Discussion — Espelho Integral do Console (MANDATO ABSOLUTO)**:
    - **TODO** o texto que a IA escreve no console **DEVE** ser postado integralmente na Discussion.
    - Inclui: análises, código gerado, outputs de comandos, logs, erros e como foram resolvidos.
    - **Proibido** resumir, filtrar ou omitir qualquer parte.
@@ -56,12 +63,12 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Ao finalizar → **Comentário de Encerramento** com tudo que foi implementado (arquivos, commits, decisões, métricas).
    - Consultar `ai_skills/workflows/backlog_management.md` (Passo 6) para templates e momentos obrigatórios.
 
-7. **Rastreabilidade**:
+8. **Rastreabilidade**:
    - Branch: `session/<YYYYMMDD>-<LOGIN>-<contexto>` — uma branch por sessão, compartilhada por todas as Issues (ver `backlog_management.md` Passo 3).
    - Commits: referenciar o ID da Issue (`#ID`).
    - Push ao final de cada atividade concluída.
 
-8. **Campos Técnicos Obrigatórios**:
+9. **Campos Técnicos Obrigatórios**:
    - **Activity**: `Deployment`, `Design`, `Development`, `Documentation`, `Requirements` ou `Testing`.
    - **Effort**: estimativa inicial em horas.
 
@@ -108,7 +115,13 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Uma tag de **contexto** com palavra-chave que identifique a atividade (ex: `CriacaoEndpoint`, `CorrecaoBug`, `RefatoracaoAuth`, `AjusteLayout`, `MigracaoSchema`).
    - Tag de tipo de projeto: `Backend` ou `Frontend`.
 
-4. **Fluxo de Estados — Sequencial e Obrigatório**:
+4. **Iteration Trimestral — Obrigatória e Automática**:
+   - Ao iniciar sessão/branch, garantir a Iteration trimestral do projeto no formato `YYYY.QN` (ex: `2026.Q2`).
+   - Mover automaticamente Issues em `Backlog` e `To Do` para a Iteration atual.
+   - Não mover Issues em `Doing`, `Review` ou `Done`.
+   - Seguir `ai_skills/workflows/backlog_management.md` Passo 0.5.
+
+5. **Fluxo de Estados — Sequencial e Obrigatório**:
 
    ```
    Backlog ──► To Do ──► Doing ──► Review
@@ -124,23 +137,23 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
 
    > A IA **NUNCA** move para `Done`.
 
-5. **Datas e Métricas — Obrigatórias**:
+6. **Datas e Métricas — Obrigatórias**:
    - **Start Date** (`Microsoft.VSTS.Scheduling.StartDate`): preencher ao mover para `Doing`.
    - **Finish Date** (`Microsoft.VSTS.Scheduling.FinishDate`): preencher ao mover para `Review`.
    - **Completed Work** (`Microsoft.VSTS.Scheduling.CompletedWork`): preencher com o **total de tokens consumidos** (entrada + saída) durante toda a execução da Issue.
 
-6. **Discussion — Comentários Incrementais Obrigatórios**:
+7. **Discussion — Comentários Incrementais Obrigatórios**:
    - A cada nova etapa executada → novo comentário na Discussion.
    - **Nunca editar** comentários anteriores — são registros imutáveis de evidência.
    - Ao finalizar → adicionar o **Comentário de Encerramento** com resumo completo do que foi entregue.
    - Consultar `ai_skills/workflows/backlog_management.md` (Passo 6) para templates.
 
-7. **Rastreabilidade**:
+8. **Rastreabilidade**:
    - Branch: `session/<YYYYMMDD>-<LOGIN>-<contexto>` — uma branch por sessão, compartilhada por todas as Issues (ver `backlog_management.md` Passo 3).
    - Commits: mensagem deve referenciar o ID da Issue (`#ID`).
    - Push ao final de cada atividade concluída.
 
-8. **Campos Técnicos Obrigatórios**:
+9. **Campos Técnicos Obrigatórios**:
    - **Activity**: `Deployment`, `Design`, `Development`, `Documentation`, `Requirements` ou `Testing`.
    - **Effort**: estimativa inicial em horas.
 

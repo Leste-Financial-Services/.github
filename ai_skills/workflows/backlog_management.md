@@ -60,6 +60,112 @@ Se houver Issues em `To Do`, exibir antes de prosseguir:
 
 ---
 
+## 🗓️ Passo 0.5 — Criar/Atualizar Iteration Trimestral
+
+> **Executar sempre que uma nova sessão ou branch for iniciada**, após consultar Issues abertas em `To Do` e antes de criar novas Issues.
+> As Iterations são trimestrais e seguem obrigatoriamente o formato `YYYY.QN`.
+
+### Regra de nomeação
+
+| Período | Nome da Iteration | Data inicial | Data final |
+| ------- | ----------------- | ------------ | ---------- |
+| Janeiro a Março | `YYYY.Q1` | `YYYY-01-01` | `YYYY-03-31` |
+| Abril a Junho | `YYYY.Q2` | `YYYY-04-01` | `YYYY-06-30` |
+| Julho a Setembro | `YYYY.Q3` | `YYYY-07-01` | `YYYY-09-30` |
+| Outubro a Dezembro | `YYYY.Q4` | `YYYY-10-01` | `YYYY-12-31` |
+
+Exemplo: qualquer sessão iniciada em maio/2026 usa a Iteration `2026.Q2`.
+
+### Calcular trimestre atual
+
+```bash
+YEAR=$(date -u +"%Y")
+MONTH=$(date -u +"%m")
+
+if [ "$MONTH" -le 3 ]; then
+  QUARTER="Q1"
+  START_DATE="${YEAR}-01-01"
+  FINISH_DATE="${YEAR}-03-31"
+elif [ "$MONTH" -le 6 ]; then
+  QUARTER="Q2"
+  START_DATE="${YEAR}-04-01"
+  FINISH_DATE="${YEAR}-06-30"
+elif [ "$MONTH" -le 9 ]; then
+  QUARTER="Q3"
+  START_DATE="${YEAR}-07-01"
+  FINISH_DATE="${YEAR}-09-30"
+else
+  QUARTER="Q4"
+  START_DATE="${YEAR}-10-01"
+  FINISH_DATE="${YEAR}-12-31"
+fi
+
+ITERATION_NAME="${YEAR}.${QUARTER}"
+```
+
+### Criar a Iteration no projeto, se não existir
+
+Executar para **cada projeto/repositório impactado** pela sessão:
+
+```bash
+PROJECT_NAME="<NOME_REPOSITORIO_OU_PROJETO>"
+ITERATION_PATH="\\${PROJECT_NAME}\\${ITERATION_NAME}"
+
+ITERATION_ID=$(az boards iteration project list \
+  --project "$PROJECT_NAME" \
+  --org "https://dev.azure.com/LesteDevOps" \
+  --path "$ITERATION_PATH" \
+  --query "[0].identifier" -o tsv 2>/dev/null)
+
+if [ -z "$ITERATION_ID" ]; then
+  ITERATION_ID=$(az boards iteration project create \
+    --name "$ITERATION_NAME" \
+    --project "$PROJECT_NAME" \
+    --org "https://dev.azure.com/LesteDevOps" \
+    --start-date "$START_DATE" \
+    --finish-date "$FINISH_DATE" \
+    --query "identifier" -o tsv)
+fi
+
+# Adicionar a Iteration ao time padrão do projeto para aparecer como Sprint.
+# Se o projeto não tiver time com o mesmo nome, não bloquear a execução.
+az boards iteration team add \
+  --id "$ITERATION_ID" \
+  --team "$PROJECT_NAME" \
+  --project "$PROJECT_NAME" \
+  --org "https://dev.azure.com/LesteDevOps" \
+  2>/dev/null || true
+```
+
+> Se a Iteration já existir, reutilizar. Se o vínculo com o time já existir, continuar sem erro. Não perguntar ao usuário.
+
+### Mover Issues em Backlog e To Do para a Iteration trimestral
+
+Mover automaticamente todas as Issues do projeto que estejam em `Backlog` ou `To Do` para a Iteration atual:
+
+```bash
+ISSUES_TO_MOVE=$(az boards query \
+  --wiql "SELECT [System.Id]
+          FROM WorkItems
+          WHERE [System.WorkItemType] = 'Issue'
+            AND [System.TeamProject] = '$PROJECT_NAME'
+            AND [System.State] IN ('Backlog', 'To Do')" \
+  --org "https://dev.azure.com/LesteDevOps" \
+  --query "[].id" -o tsv)
+
+for ISSUE_ID in $ISSUES_TO_MOVE; do
+  az boards work-item update \
+    --id "$ISSUE_ID" \
+    --org "https://dev.azure.com/LesteDevOps" \
+    --fields "System.IterationPath=${PROJECT_NAME}\\${ITERATION_NAME}"
+done
+```
+
+> **Sem confirmação**: a criação da Iteration e a movimentação das Issues em `Backlog`/`To Do` são automáticas.
+> **Escopo**: não mover Issues em `Doing`, `Review` ou `Done`.
+
+---
+
 ## 🔍 Passo 1 — Análise de Impacto por Projeto
 
 Para cada solicitação, a IA deve categorizar o impacto:
