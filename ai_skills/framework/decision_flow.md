@@ -5,16 +5,20 @@ Define o processo de raciocínio lógico que a IA deve seguir para cada solicita
 ## 0. ⛔ ETAPA ZERO — Análise de Impacto & Criação de Issues (MANDATÓRIO ABSOLUTO)
 
 > **Esta etapa é OBRIGATÓRIA e deve ser executada ANTES de qualquer outra ação.**
-> ⚡ **Criação de Issues e branches é automática — não requer aprovação prévia.**
+> ⚡ **Criação de Issues, movimentação no kanban e criação de branches são automáticas — não requerem aprovação prévia.**
 >
 > ### ❌ Comportamentos PROIBIDOS (para todos os modelos, incluindo Claude)
 > - Perguntar "posso criar a Issue?", "devo registrar no backlog?", "quer que eu abra uma Issue?"
+> - Perguntar "posso mover para Doing?", "devo mover para Review?", "confirma a movimentação?"
 > - Iniciar código antes de criar as Issues
 > - Pular a criação de Issues "para agilizar" ou "ir direto ao ponto"
 > - Criar Issues apenas se o usuário pedir explicitamente
+> - Mover Issues apenas se o usuário pedir explicitamente
 >
 > ### ✅ Comportamento CORRETO
-> Ao receber qualquer solicitação de desenvolvimento: **criar as Issues imediatamente**, sem perguntar, sem pausar, sem aguardar confirmação.
+> - Ao receber qualquer solicitação de desenvolvimento: **criar as Issues imediatamente**, sem perguntar.
+> - Ao iniciar a implementação de uma Issue: **mover para `Doing` imediatamente**, sem perguntar.
+> - Ao concluir a implementação de uma Issue: **mover para `Review` imediatamente**, sem perguntar.
 
 ### Detecção de intenção de execução de Issues existentes
 Se o usuário solicitar execução de Issues já existentes (ex: "execute a Issue #X", "execute as Issues em To Do"), **não criar novas Issues** — seguir diretamente `ai_skills/workflows/execute_issues.md`.

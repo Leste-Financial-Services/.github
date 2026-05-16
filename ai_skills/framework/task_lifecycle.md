@@ -2,6 +2,15 @@
 
 Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOps.
 
+## ⛔ PROIBIÇÕES ABSOLUTAS (todos os modelos)
+
+- **PROIBIDO** pedir confirmação para criar Issues ou mover estados no kanban.
+- **PROIBIDO** perguntar "posso mover para Doing?", "confirma que posso avançar?", "devo mover para Review?".
+- **PROIBIDO** aguardar input do usuário entre as transições de estado.
+- Todas as movimentações são **automáticas, imediatas e silenciosas** — o usuário é apenas informado no resumo.
+
+---
+
 ## 🛑 Regras Mandatórias (Absolute Mandates)
 
 1. **Criação Antecipada**: **SEMPRE** criar as Issues antes de qualquer código. Seguir `ai_skills/workflows/backlog_management.md`.
@@ -18,21 +27,21 @@ Define os estados e responsabilidades da IA ao longo de uma Issue no Azure DevOp
    - Uma tag de **contexto** com palavra-chave da atividade (ex: `CriacaoEndpoint`, `CorrecaoBug`, `RefatoracaoAuth`).
    - Tag de tipo: `Backend` ou `Frontend`.
 
-4. **Fluxo de Estados — Sequencial e Obrigatório**:
+4. **Fluxo de Estados — Sequencial, Obrigatório e Automático**:
 
    ```
    Backlog ──► To Do ──► Doing ──► Review
                                      └── Done (apenas humanos)
    ```
 
-   | Transição          | Quando                              | Quem   |
-   | ------------------ | ----------------------------------- | ------ |
-   | Backlog → To Do    | Imediatamente após criar a Issue    | IA     |
-   | To Do → Doing      | Ao iniciar a implementação          | IA     |
-   | Doing → Review     | Ao concluir toda a implementação    | IA     |
-   | Review → Done      | Após validação humana               | Humano |
+   | Transição          | Quando                              | Quem   | Pergunta ao usuário? |
+   | ------------------ | ----------------------------------- | ------ | -------------------- |
+   | Backlog → To Do    | Imediatamente após criar a Issue    | IA     | ❌ Nunca             |
+   | To Do → Doing      | Ao iniciar a implementação          | IA     | ❌ Nunca             |
+   | Doing → Review     | Ao concluir toda a implementação    | IA     | ❌ Nunca             |
+   | Review → Done      | Após validação humana               | Humano | —                    |
 
-   > A IA **NUNCA** move para `Done`.
+   > A IA **NUNCA** move para `Done` e **NUNCA** pergunta antes de mover.
 
 5. **Datas com Datetime Exato — Obrigatórias**:
    - **Start Date**: capturado no momento **exato** em que a Issue é movida para `Doing` (formato `YYYY-MM-DDTHH:MM:SSZ`).

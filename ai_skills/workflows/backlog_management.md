@@ -3,10 +3,12 @@
 > ## ⛔ REGRA ABSOLUTA — VÁLIDA PARA TODOS OS MODELOS (GPT, Claude, Gemini, etc.)
 >
 > **Criar Issues no Azure DevOps é OBRIGATÓRIO e AUTOMÁTICO para TODA solicitação.**
-> **PROIBIDO** pedir confirmação, perguntar "posso criar?", "deseja que eu crie?" ou qualquer variação.
+> **Mover Issues no kanban é OBRIGATÓRIO e AUTOMÁTICO a cada transição de estado.**
+> **PROIBIDO** pedir confirmação para criar Issues: "posso criar?", "deseja que eu crie?", ou qualquer variação.
+> **PROIBIDO** pedir confirmação para mover Issues: "posso mover para Doing?", "confirma a movimentação?", ou qualquer variação.
 > **PROIBIDO** iniciar qualquer implementação sem ter criado as Issues primeiro.
 > **PROIBIDO** justificar a não-criação com frases como "vou direto ao código", "para agilizar", "pulando o backlog".
-> A criação de Issues e branches acontece **sempre, imediatamente e sem aprovação prévia**.
+> A criação de Issues, movimentação no kanban e criação de branches acontece **sempre, imediatamente e sem aprovação prévia**.
 
 ---
 
