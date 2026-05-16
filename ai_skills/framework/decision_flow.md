@@ -1,105 +1,112 @@
-# 🔄 Fluxo de Decisão da IA
+# 🧠 Decision Flow (Fluxo de Decisão da IA)
 
-## Início de TODA interação
+Define o processo de raciocínio lógico que a IA deve seguir para cada solicitação.
 
-```
-┌─────────────────────────────────────────┐
-│         NOVA SOLICITAÇÃO DO USUÁRIO      │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 1. CONSULTAR MEMÓRIA LOCAL              │
-│    - Seguir workflows/memory_workflow.md │
-│    - Ler ./memory/_summary.md           │
-│    - Ler últimos 3 diários recentes     │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 2. VERIFICAR STACK PREFERENCES          │
-│    - Ler config/stack_preferences.md    │
-│    - Se [NÃO CONFIGURADO] → PERGUNTAR  │
-│    - Usar linguagens definidas          │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 3. VERIFICAR REUSO / CONHECIMENTO       │
-│    - Ler project_knowledge_workflow.md  │
-│    - Buscar no indice central           │
-│    - Se houver match, abrir docs locais │
-│    - Frontend: checar endpoints prod    │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 4. CRIAR ISSUE (OBRIGATÓRIO)            │
-│    ⚠️ SEMPRE criar issue no Azure DevOps │
-│    - Org: https://dev.azure.com/        │
-│      LesteDevOps                        │
-│    - Auth: credenciais do usuário       │
-│      via az login                       │
-│    - Antes de qualquer código/alteração │
-│    - Título claro do que será feito     │
-│    - Vincular ao projeto correto        │
-│    - Se impactar ambos projetos, criar  │
-│      uma issue em cada e vincular       │
-│    - Informar ID ao usuário             │
-│    ❌ SEM ISSUE = SEM EXECUÇÃO          │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 5. ANALISAR IMPACTO                     │
-│    - Backend? Frontend? Ambos?          │
-│    - Consultar tech_rules/ relevantes   │
-│    - Consultar business_rules/          │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 6. CARREGAR CONTEXTO MINIMO             │
-│    - Seguir workflows/token_efficient_  │
-│      context.md                         │
-│    - Para Microsoft/Azure/Graph, usar   │
-│      microsoft-learn-skill              │
-│    - Ler routers/indices antes de       │
-│      referencias detalhadas             │
-│    - Carregar apenas regras relevantes  │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 7. EXECUTAR                             │
-│    - Implementar na linguagem correta   │
-│    - Seguir padrões da stack definida   │
-│    - Respeitar decisões anteriores      │
-│    - Registrar interações/decisões      │
-│      durante a execução                 │
-└────────────────────┬────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────┐
-│ 8. REGISTRAR NA MEMÓRIA LOCAL           │
-│    ⛔ OBRIGATÓRIO — SEM EXCEÇÃO         │
-│    - Seguir workflows/memory_workflow.md │
-│    - Append em ./memory/{yyyy-MM-dd}.md │
-│    - Atualizar ./memory/_summary.md:    │
-│      • "Última Atividade"              │
-│      • "Decisões Permanentes" (se há)  │
-│    - Compactar se > 7 diários           │
-│    ❌ SEM MEMÓRIA = ATIVIDADE INCOMPLETA│
-└─────────────────────────────────────────┘
+## 0. ⛔ ETAPA ZERO — Análise de Impacto & Criação de Issues (MANDATÓRIO ABSOLUTO)
+
+> **Esta etapa é OBRIGATÓRIA e deve ser executada ANTES de qualquer outra ação.**
+> ⚡ **Criação de Issues e branches é automática — não requer aprovação prévia.**
+>
+> ### ❌ Comportamentos PROIBIDOS (para todos os modelos, incluindo Claude)
+> - Perguntar "posso criar a Issue?", "devo registrar no backlog?", "quer que eu abra uma Issue?"
+> - Iniciar código antes de criar as Issues
+> - Pular a criação de Issues "para agilizar" ou "ir direto ao ponto"
+> - Criar Issues apenas se o usuário pedir explicitamente
+>
+> ### ✅ Comportamento CORRETO
+> Ao receber qualquer solicitação de desenvolvimento: **criar as Issues imediatamente**, sem perguntar, sem pausar, sem aguardar confirmação.
+
+### Detecção de intenção de execução de Issues existentes
+Se o usuário solicitar execução de Issues já existentes (ex: "execute a Issue #X", "execute as Issues em To Do"), **não criar novas Issues** — seguir diretamente `ai_skills/workflows/execute_issues.md`.
+
+### Criação de novas Issues (fluxo padrão)
+1. Executar o workflow `ai_skills/workflows/backlog_management.md` na íntegra.
+2. Identificar quais projetos são impactados: **Backend**, **Frontend** ou **Ambos**.
+3. Detectar automaticamente o email do revisor via `az account show` (ver Seção 1.0) — sem perguntar ao usuário.
+4. Criar a(s) Issue(s) no Azure DevOps — **imediatamente, sem aguardar confirmação**.
+5. Criar a(s) branch(es) em cada projeto impactado — **imediatamente, sem aguardar confirmação**.
+6. Vincular as Issues entre projetos quando ambos forem impactados.
+7. Apresentar o resumo ao usuário e iniciar a implementação.
+
+> **Bloqueio**: Se não houver URL de Azure DevOps configurada (`[MISSING]`), interromper e solicitar configuração.
+
+---
+
+## 1. Perguntas Obrigatórias ao Usuário (antes de qualquer código)
+
+Quando a solicitação envolver criação ou configuração de projeto, a IA **DEVE** perguntar:
+
+### 1.0 — Detecção Automática do Revisor (sem perguntar ao usuário)
+
+A IA **DEVE** detectar automaticamente o email do usuário logado no laptop:
+
+```bash
+# 1ª opção — Azure CLI (conta logada no az login) — preferida
+NOME_REVISOR=$(az account show --query "user.name" -o tsv 2>/dev/null)
+
+# 2ª opção — Git config global
+if [ -z "$NOME_REVISOR" ]; then
+  NOME_REVISOR=$(git config --global user.email 2>/dev/null)
+fi
+
+# 3ª opção — Variável de ambiente do SO
+if [ -z "$NOME_REVISOR" ]; then
+  NOME_REVISOR="${USERNAME}@leste.com"
+fi
 ```
 
-## Regras de Prioridade
-1. **Issue obrigatória** > Qualquer execução (sem issue, não faz nada)
-2. **Memória obrigatória** > Atividade concluída (sem registro, não está feito)
-3. **Memória** > Suposições (sempre consultar antes de decidir)
-4. **Reuso/conhecimento de projetos** > Criar funcionalidade duplicada
-5. **Stack configurada** > Preferência da IA (usar o que o usuário definiu)
-6. **Microsoft Learn** > Suposições sobre Azure, Graph, Entra e ambiente Microsoft
-7. **Contexto mínimo** > Leitura ampla (usar routers e carregar detalhes sob demanda)
-8. **Consistência** > Novidade (manter padrões já estabelecidos)
-9. **Perguntar** > Assumir (na dúvida, perguntar ao usuário)
+> `<NOME_REVISOR>` é usado em `ReviewedBy` e `AssignedTo` ao mover para Review.
+> **Nunca perguntar ao usuário** — a detecção é sempre automática.
+
+### 1.1 — Framework Frontend (se houver impacto no frontend)
+> "Qual framework deseja utilizar no frontend?"
+> - **[1] Vue.js 3** — padrão Leste (Quasar + Pinia + Vite)
+> - **[2] React 18** — (Vite + Zustand + TailwindCSS)
+
+Aplicar os padrões correspondentes de `ai_skills/tech_rules/frontend/coding_standards.md`.
+
+### 1.2 — Docker (sempre perguntar para qualquer projeto novo)
+> "O projeto deve rodar em Docker?"
+> - **[S] Sim** → Aplicar `ai_skills/tech_rules/docker.md` — **sempre Linux**, nunca Windows.
+> - **[N] Não** → Prosseguir sem containerização.
+
+---
+
+## 2. Detecção de Desvio Arquitetural (DDD / Padrões)
+
+Antes de implementar qualquer alteração em código existente, a IA **DEVE** analisar a estrutura do projeto e verificar conformidade com:
+- Backend: Generic DDD (`ai_skills/tech_rules/backend/architecture.md`) — 4 camadas desacopladas.
+- Frontend: Arquitetura por camadas (`ai_skills/tech_rules/frontend/architecture.md`) — separação components/pages/stores/services.
+
+**Se detectar desvio dos padrões**, a IA deve **interromper** e informar o usuário:
+
+```
+⚠️ Desvio Arquitetural Detectado
+
+O projeto atual apresenta os seguintes desvios em relação aos padrões DDD/Arquitetura:
+- <Desvio 1 identificado — ex: "Lógica de negócio no Controller">
+- <Desvio 2 identificado — ex: "Chamadas diretas ao banco na camada API">
+- <Desvio 3 identificado — ex: "Ausência da camada Domain">
+
+Deseja realizar um Refactoring para adequar ao padrão antes de prosseguir?
+  [S] Sim — Criar Issue de Refactoring e corrigir a arquitetura primeiro.
+  [N] Não — Continuar no padrão atual (o desvio ficará registrado na Discussion da Issue).
+```
+
+- Se **[S]**: Criar uma Issue específica de Refactoring no backlog, com tag `Refactoring`, e executá-la antes da feature solicitada.
+- Se **[N]**: Registrar o desvio identificado como observação na Discussion da Issue atual e prosseguir.
+
+---
+
+## 3. Pesquisa & Contextualização
+- Antes de sugerir ou agir, a IA deve validar se o conhecimento necessário está em `ai_skills/system_knowledge/`.
+- Verificar se a tarefa impacta regras de negócio descritas em `ai_skills/business_rules/`.
+
+## 4. Escolha de Estratégia
+- **Greenfield**: Seguir `ai_skills/tech_rules/backend/architecture.md` (Generic DDD) + framework escolhido no Passo 1.
+- **Legado/Manutenção**: Seguir as restrições em `ai_skills/system_knowledge/` + aplicar detecção de desvio do Passo 2.
+- Priorizar sempre a simplicidade e a conformidade com as `Core Mandates` em `ai.md`.
+
+## 5. Validação de Barreiras
+- Antes de apresentar o resultado, validar contra as regras em `ai_skills/validation/forbidden.md`.
+- Garantir que todos os `Must Have` em `ai_skills/validation/must_have.md` foram atendidos.

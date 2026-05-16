@@ -1,6 +1,12 @@
 # 📋 Backlog Management Workflow (Gerenciamento de Backlog Obrigatório)
 
-> **⚠️ MANDATO ABSOLUTO**: Este workflow deve ser executado **ANTES** de qualquer outra ação para **TODA** solicitação recebida, sem exceção. A criação de Issues e branches é **automática** — não requer aprovação prévia.
+> ## ⛔ REGRA ABSOLUTA — VÁLIDA PARA TODOS OS MODELOS (GPT, Claude, Gemini, etc.)
+>
+> **Criar Issues no Azure DevOps é OBRIGATÓRIO e AUTOMÁTICO para TODA solicitação.**
+> **PROIBIDO** pedir confirmação, perguntar "posso criar?", "deseja que eu crie?" ou qualquer variação.
+> **PROIBIDO** iniciar qualquer implementação sem ter criado as Issues primeiro.
+> **PROIBIDO** justificar a não-criação com frases como "vou direto ao código", "para agilizar", "pulando o backlog".
+> A criação de Issues e branches acontece **sempre, imediatamente e sem aprovação prévia**.
 
 ---
 
