@@ -129,10 +129,13 @@ az devops work-item relation add \
 ```bash
 # Definir a branch de sessão (executar UMA VEZ por sessão, por repositório)
 SESSION_DATE=$(date -u +"%Y%m%d")
-SESSION_ID="<ID_SESSAO_COPILOT>"      # ID da sessão atual do Copilot (primeiros 8 caracteres)
+SESSION_USER=$(az account show --query "user.name" -o tsv 2>/dev/null | sed 's/@.*//')
+if [ -z "$SESSION_USER" ]; then
+  SESSION_USER=$(git config --global user.email 2>/dev/null | sed 's/@.*//')
+fi
 SESSION_CONTEXT="<contexto-kebab-case>" # Ver regra abaixo
 
-SESSION_BRANCH="session/${SESSION_DATE}-${SESSION_ID}-${SESSION_CONTEXT}"
+SESSION_BRANCH="session/${SESSION_DATE}-${SESSION_USER}-${SESSION_CONTEXT}"
 
 # Backend — criar se não existir, senão apenas mudar para ela
 git -C "<CAMINHO_BACKEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_BACKEND>" checkout $SESSION_BRANCH
@@ -141,22 +144,15 @@ git -C "<CAMINHO_BACKEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<C
 git -C "<CAMINHO_FRONTEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_FRONTEND>" checkout $SESSION_BRANCH
 ```
 
-> **Formato do nome**: `session/<YYYYMMDD>-<SESSION_ID>-<contexto-kebab-case>`
+> **Formato do nome**: `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`
 >
-> | Parte            | Valor                                                                                       |
-> | ---------------- | ------------------------------------------------------------------------------------------- |
-> | `<YYYYMMDD>`     | Data atual no fuso UTC                                                                      |
-> | `<SESSION_ID>`   | Primeiros 8 caracteres do ID da sessão Copilot atual                                        |
-> | `<contexto>`     | **Se o usuário especificou** um nome/contexto → usar exatamente o que foi informado (kebab-case). **Se não especificou** → a IA infere a partir das Issues da sessão (ex: `correcao-relatorios`, `integracao-pagamentos`) |
+> | Parte        | Valor                                                                                       |
+> | ------------ | ------------------------------------------------------------------------------------------- |
+> | `<YYYYMMDD>` | Data atual no fuso UTC                                                                      |
+> | `<LOGIN>`    | Parte local do email do usuário logado (antes do `@`), detectada via `az account show` ou `git config user.email` |
+> | `<contexto>` | **Se o usuário especificou** um nome/contexto → usar exatamente o que foi informado (kebab-case). **Se não especificou** → a IA infere a partir das Issues da sessão (ex: `correcao-relatorios`, `integracao-pagamentos`) |
 >
 > **Regra**: Armazenar `$SESSION_BRANCH` no início da sessão e reutilizar em todas as Issues seguintes.
-
----
-
-## 📣 Passo 4 — Resumo ao Usuário (sem pausa)
-
-```
-✅ Issues criadas — Implementação iniciada
 
 | Projeto   | Issue ID | Tags                          | Assign              | Estado |
 |-----------|----------|-------------------------------|---------------------|--------|
@@ -398,10 +394,13 @@ Criar a branch de sessão imediatamente após as Issues — **sem aprovação**.
 ```bash
 # Definir a branch de sessão (executar UMA VEZ por sessão, por repositório)
 SESSION_DATE=$(date -u +"%Y%m%d")
-SESSION_ID="<ID_SESSAO_COPILOT>"      # ID da sessão atual do Copilot (primeiros 8 caracteres)
+SESSION_USER=$(az account show --query "user.name" -o tsv 2>/dev/null | sed 's/@.*//')
+if [ -z "$SESSION_USER" ]; then
+  SESSION_USER=$(git config --global user.email 2>/dev/null | sed 's/@.*//')
+fi
 SESSION_CONTEXT="<contexto-kebab-case>" # Ver regra abaixo
 
-SESSION_BRANCH="session/${SESSION_DATE}-${SESSION_ID}-${SESSION_CONTEXT}"
+SESSION_BRANCH="session/${SESSION_DATE}-${SESSION_USER}-${SESSION_CONTEXT}"
 
 # Backend — criar se não existir, senão apenas mudar para ela
 git -C "<CAMINHO_BACKEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_BACKEND>" checkout $SESSION_BRANCH
@@ -410,13 +409,13 @@ git -C "<CAMINHO_BACKEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<C
 git -C "<CAMINHO_FRONTEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_FRONTEND>" checkout $SESSION_BRANCH
 ```
 
-> **Formato do nome**: `session/<YYYYMMDD>-<SESSION_ID>-<contexto-kebab-case>`
+> **Formato do nome**: `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`
 >
-> | Parte            | Valor                                                                                       |
-> | ---------------- | ------------------------------------------------------------------------------------------- |
-> | `<YYYYMMDD>`     | Data atual no fuso UTC                                                                      |
-> | `<SESSION_ID>`   | Primeiros 8 caracteres do ID da sessão Copilot atual                                        |
-> | `<contexto>`     | **Se o usuário especificou** um nome/contexto → usar exatamente o que foi informado (kebab-case). **Se não especificou** → a IA infere a partir das Issues da sessão (ex: `correcao-relatorios`, `integracao-pagamentos`) |
+> | Parte        | Valor                                                                                       |
+> | ------------ | ------------------------------------------------------------------------------------------- |
+> | `<YYYYMMDD>` | Data atual no fuso UTC                                                                      |
+> | `<LOGIN>`    | Parte local do email do usuário logado (antes do `@`), detectada via `az account show` ou `git config user.email` |
+> | `<contexto>` | **Se o usuário especificou** um nome/contexto → usar exatamente o que foi informado (kebab-case). **Se não especificou** → a IA infere a partir das Issues da sessão (ex: `correcao-relatorios`, `integracao-pagamentos`) |
 >
 > **Regra**: Armazenar `$SESSION_BRANCH` no início da sessão e reutilizar em todas as Issues seguintes.
 

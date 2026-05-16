@@ -109,7 +109,7 @@ git -C "<CAMINHO_PROJETO>" checkout $SESSION_BRANCH 2>/dev/null || \
   git -C "<CAMINHO_PROJETO>" checkout -b $SESSION_BRANCH
 ```
 
-> `$SESSION_BRANCH` deve ser definido **uma única vez por sessão** com o formato `session/<YYYYMMDD>-<SESSION_ID>-<contexto-kebab-case>`, onde o contexto é informado pelo usuário ou inferido pela IA a partir das Issues da sessão.
+> `$SESSION_BRANCH` deve ser definido **uma única vez por sessão** com o formato `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`, onde o contexto é informado pelo usuário ou inferido pela IA a partir das Issues da sessão.
 
 ### 3.3 — Mover para Doing + registrar Start DateTime exato
 ```bash
