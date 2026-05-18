@@ -6,7 +6,7 @@ Define como a IA deve usar Azure DevOps Test Plans para rastrear validação fun
 
 ## ⛔ Regra Obrigatória
 
-> Para toda nova solicitação que gere Issues, a IA deve criar ou reutilizar um **Test Plan por Iteration trimestral** e criar **Test Cases vinculados às Issues** a partir dos critérios de aceite.
+> Para toda nova solicitação que gere Issues/Bugs, a IA deve criar ou reutilizar um **Test Plan por Iteration vigente** e criar **Test Cases vinculados às Issues/Bugs** a partir dos critérios de aceite.
 >
 > Test Plans **não substitui testes automatizados**. Ele registra aceite funcional, QA manual/exploratório e evidência de validação.
 
@@ -35,7 +35,7 @@ Test Plan: Sentinel.Frontend - 2026.Q2
 
 ---
 
-## Passo 1 — Criar ou Reutilizar Test Plan Trimestral
+## Passo 1 — Criar ou Reutilizar Test Plan da Iteration Vigente
 
 Usar o mesmo `PROJECT_NAME`, `ITERATION_NAME`, `START_DATE` e `FINISH_DATE` calculados no `backlog_management.md` Passo 0.5.
 
@@ -128,7 +128,7 @@ EOF
 
 ## Passo 3 — Criar Test Cases a partir das Issues
 
-Para cada Issue criada ou incluída na sessão:
+Para cada Issue/Bug criado ou incluído na sessão:
 
 1. Extrair critérios de aceite da Issue.
 2. Criar pelo menos 1 Test Case por critério de aceite relevante.
@@ -195,7 +195,7 @@ Antes de mover uma Issue para `Review`, a IA deve registrar:
 | Resultado | `Passed`, `Failed`, `Blocked` ou `Not Run` |
 | Evidência | Output de testes automatizados, prints/logs manuais, ou justificativa |
 
-Se um Test Case estiver `Failed` ou `Blocked`, a Issue **não deve** ser movida para `Review` sem registrar o motivo e criar/relacionar a Issue de correção correspondente.
+Se um Test Case estiver `Failed` ou `Blocked`, a Issue/Bug **não deve** ser movida para `Review` sem registrar o motivo e criar/relacionar o Bug de correção correspondente.
 
 ---
 

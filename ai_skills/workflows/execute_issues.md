@@ -101,7 +101,7 @@ Extrair: título, descrição, critérios de aceite, tags, projeto, comentários
 
 ### 3.2 — Garantir Test Plan e Test Cases
 
-Antes de implementar, garantir que a Issue tenha Test Cases vinculados no Test Plan da Iteration trimestral:
+Antes de implementar, garantir que a Issue tenha Test Cases vinculados no Test Plan da Iteration vigente:
 
 - Criar/reutilizar Test Plan `<PROJECT_NAME> - <ITERATION_NAME>`.
 - Criar suite adequada (`Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke`).
@@ -122,15 +122,18 @@ git -C "<CAMINHO_PROJETO>" checkout $SESSION_BRANCH 2>/dev/null || \
 
 > `$SESSION_BRANCH` deve ser definido **uma única vez por sessão** com o formato `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`, onde o contexto é informado pelo usuário ou inferido pela IA a partir das Issues da sessão.
 
-### 3.4 — Mover para Doing + registrar Start DateTime exato
+### 3.4 — Mover para Doing + registrar Start DateTime e Estimated Date
 ```bash
 START_DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+ESTIMATED_DATETIME="<YYYY-MM-DDTHH:MM:SSZ>"
 
 az boards work-item update \
   --id <ID_ISSUE> \
   --org "https://dev.azure.com/LesteDevOps" \
   --state "Doing" \
-  --fields "Microsoft.VSTS.Scheduling.StartDate=$START_DATETIME"
+  --fields \
+    "Microsoft.VSTS.Scheduling.StartDate=$START_DATETIME" \
+    "Microsoft.VSTS.Scheduling.TargetDate=$ESTIMATED_DATETIME"
 ```
 
 ### 3.5 — Implementar o que está descrito na Issue
@@ -146,7 +149,7 @@ Antes de mover para `Review`, registrar resultado dos Test Cases vinculados:
 | Resultado | Ação |
 | --------- | ---- |
 | `Passed` | Pode mover para `Review` |
-| `Failed` | Não mover para `Review`; registrar falha e corrigir/criar Issue relacionada |
+| `Failed` | Não mover para `Review`; registrar falha e corrigir/criar Bug relacionado |
 | `Blocked` | Não mover para `Review`; registrar bloqueio na Discussion |
 | `Not Run` | Registrar justificativa e deixar explícito no comentário final |
 
@@ -167,12 +170,14 @@ az boards work-item update \
 ```
 
 ### 3.8 — Comentário de Encerramento (espelho integral do resumo do console)
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## ✅ [$FINISH_DATETIME] Entrega Concluída — Resumo Final
 
+Usar o helper `Add-WorkItemDiscussion` definido em `ai_skills/workflows/backlog_management.md` para preservar comentários multilinha completos.
+
+```powershell
+Add-WorkItemDiscussion `
+  -WorkItemId <ID_ISSUE> `
+  -Title "Entrega Concluída — Resumo Final" `
+  -Body @"
 ### O que foi implementado
 <Lista detalhada e completa de tudo criado/modificado/removido>
 
@@ -196,7 +201,8 @@ az boards work-item update \
 - Start: $START_DATETIME
 - Finish: $FINISH_DATETIME
 - Tokens: <TOTAL>
-- Reviewed By: <NOME_REVISOR>"
+- Reviewed By: <NOME_REVISOR>
+"@
 ```
 
 ---
@@ -233,3 +239,17 @@ Ao finalizar todas:
 | Issue não está assign para `celeste@leste.com`  | Ignorar e informar ao usuário                                     |
 | Descrição da Issue está vazia ou ambígua        | Pausar, exibir o conteúdo da Issue e pedir esclarecimento         |
 | Issue requer mudança destrutiva no banco        | Pausar e solicitar aprovação humana (ver `governance/approvals.md`) |
+
+---
+
+## 🐞 Bug reportado durante ou após a execução
+
+Se o usuário reportar erro, bug, falha ou regressão em uma Issue executada ou recém-entregue:
+
+1. Criar automaticamente work item do tipo `Bug`, sem pedir permissão.
+2. Relacionar o Bug à Issue original com `Related`, quando a origem for identificável.
+3. Se a origem não for identificável, criar o Bug solto e registrar isso na descrição/comentário.
+4. Comentar o Bug e a Issue original usando `Add-WorkItemDiscussion`.
+5. Commits da correção devem conter `AB#<BUG_ID>` e, quando aplicável, também `AB#<ID_ISSUE_ORIGINAL>`.
+
+Seguir `ai_skills/workflows/bug_reporting.md`.

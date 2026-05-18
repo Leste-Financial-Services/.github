@@ -1,4 +1,4 @@
-﻿# 📋 Backlog Management Workflow (Gerenciamento de Backlog Obrigatório)
+# 📋 Backlog Management Workflow (Gerenciamento de Backlog Obrigatório)
 
 > ## ⛔ REGRA ABSOLUTA — VÁLIDA PARA TODOS OS MODELOS (GPT, Claude, Gemini, etc.)
 >
@@ -10,6 +10,8 @@
 > **PROIBIDO** iniciar qualquer implementação sem ter criado as Issues primeiro.
 > **PROIBIDO** justificar a não-criação com frases como "vou direto ao código", "para agilizar", "pulando o backlog".
 > A criação de Issues, Test Plans/Test Cases, movimentação no kanban e criação de branches acontece **sempre, imediatamente e sem aprovação prévia**.
+> Quando o usuário reportar erro/bug/falha/regressão em atividade recém-entregue, criar automaticamente um work item do tipo **Bug** e vinculá-lo à Issue original quando identificável. Se a Issue original não for identificável, criar o Bug mesmo assim, solto. Seguir `ai_skills/workflows/bug_reporting.md`.
+> Comentários na Discussion são obrigatórios, incrementais e completos. Para conteúdo multilinha, usar `System.History` via JSON Patch conforme o Passo 6; não usar comando que corte o comentário na primeira linha.
 
 ---
 
@@ -61,10 +63,11 @@ Se houver Issues em `To Do`, exibir antes de prosseguir:
 
 ---
 
-## 🗓️ Passo 0.5 — Criar/Atualizar Iteration Trimestral
+## 🗓️ Passo 0.5 — Selecionar/Criar Iteration Vigente
 
 > **Executar sempre que uma nova sessão ou branch for iniciada**, após consultar Issues abertas em `To Do` e antes de criar novas Issues.
-> As Iterations são trimestrais e seguem obrigatoriamente o formato `YYYY.QN`.
+> A Iteration de cada Issue/Bug deve ser a Iteration válida para a data atual: `startDate <= hoje <= finishDate`.
+> Primeiro consultar e reutilizar uma Iteration existente que contenha o dia atual. Criar a Iteration trimestral `YYYY.QN` apenas se nenhuma Iteration vigente existir no projeto.
 
 ### Regra de nomeação
 
@@ -75,9 +78,36 @@ Se houver Issues em `To Do`, exibir antes de prosseguir:
 | Julho a Setembro | `YYYY.Q3` | `YYYY-07-01` | `YYYY-09-30` |
 | Outubro a Dezembro | `YYYY.Q4` | `YYYY-10-01` | `YYYY-12-31` |
 
-Exemplo: qualquer sessão iniciada em maio/2026 usa a Iteration `2026.Q2`.
+Exemplo de fallback: se nenhuma Iteration existente cobrir maio/2026, criar `2026.Q2`.
 
-### Calcular trimestre atual
+### Selecionar Iteration vigente existente
+
+```powershell
+$PROJECT_NAME = "<NOME_REPOSITORIO_OU_PROJETO>"
+$today = (Get-Date).Date
+
+$iterations = az boards iteration project list `
+  --project $PROJECT_NAME `
+  --org "https://dev.azure.com/LesteDevOps" `
+  --depth 10 `
+  -o json | ConvertFrom-Json
+
+$currentIteration = $iterations | Where-Object {
+  $_.attributes.startDate -and $_.attributes.finishDate -and
+  ([datetime]$_.attributes.startDate).Date -le $today -and
+  ([datetime]$_.attributes.finishDate).Date -ge $today
+} | Select-Object -First 1
+
+if ($currentIteration) {
+  $ITERATION_NAME = $currentIteration.name
+  $ITERATION_PATH = $currentIteration.path
+  $ITERATION_ID = $currentIteration.identifier
+}
+```
+
+### Calcular fallback trimestral (somente se nenhuma vigente existir)
+
+Executar este cálculo apenas quando `$currentIteration` não existir. Se uma Iteration vigente foi encontrada, manter `ITERATION_NAME`, `ITERATION_PATH` e `ITERATION_ID` já selecionados.
 
 ```bash
 YEAR=$(date -u +"%Y")
@@ -104,7 +134,7 @@ fi
 ITERATION_NAME="${YEAR}.${QUARTER}"
 ```
 
-### Criar a Iteration no projeto, se não existir
+### Criar a Iteration fallback no projeto, se nenhuma vigente existir
 
 Executar para **cada projeto/repositório impactado** pela sessão:
 
@@ -138,17 +168,17 @@ az boards iteration team add \
   2>/dev/null || true
 ```
 
-> Se a Iteration já existir, reutilizar. Se o vínculo com o time já existir, continuar sem erro. Não perguntar ao usuário.
+> Se uma Iteration vigente já existir, reutilizar. Se nenhuma existir, criar o fallback trimestral. Se o vínculo com o time já existir, continuar sem erro. Não perguntar ao usuário.
 
-### Mover Issues em Backlog e To Do para a Iteration trimestral
+### Mover Issues/Bugs em Backlog e To Do para a Iteration vigente
 
-Mover automaticamente todas as Issues do projeto que estejam em `Backlog` ou `To Do` para a Iteration atual:
+Mover automaticamente todas as Issues e Bugs do projeto que estejam em `Backlog` ou `To Do` para a Iteration atual:
 
 ```bash
 ISSUES_TO_MOVE=$(az boards query \
   --wiql "SELECT [System.Id]
           FROM WorkItems
-          WHERE [System.WorkItemType] = 'Issue'
+          WHERE [System.WorkItemType] IN ('Issue', 'Bug')
             AND [System.TeamProject] = '$PROJECT_NAME'
             AND [System.State] IN ('Backlog', 'To Do')" \
   --org "https://dev.azure.com/LesteDevOps" \
@@ -162,14 +192,14 @@ for ISSUE_ID in $ISSUES_TO_MOVE; do
 done
 ```
 
-> **Sem confirmação**: a criação da Iteration e a movimentação das Issues em `Backlog`/`To Do` são automáticas.
+> **Sem confirmação**: a criação da Iteration e a movimentação de Issues/Bugs em `Backlog`/`To Do` são automáticas.
 > **Escopo**: não mover Issues em `Doing`, `Review` ou `Done`.
 
 ---
 
 ## 🧪 Passo 0.6 — Criar/Reutilizar Test Plan da Iteration
 
-> **Executar sempre que uma nova sessão ou branch for iniciada**, após criar/atualizar a Iteration trimestral.
+> **Executar sempre que uma nova sessão ou branch for iniciada**, após selecionar/criar a Iteration vigente.
 
 Para cada projeto impactado, criar ou reutilizar um Test Plan no formato:
 
@@ -187,7 +217,7 @@ Regras:
 
 | Item | Regra |
 | ---- | ----- |
-| Test Plan | 1 por projeto e por Iteration trimestral |
+| Test Plan | 1 por projeto e por Iteration vigente |
 | Suites | `Backend`, `Frontend`, `Integracao`, `Regressao`, `Smoke` conforme o plano de ação |
 | Test Cases | Criados a partir dos critérios de aceite de cada Issue |
 | Rastreabilidade | Cada Test Case deve ser vinculado à Issue correspondente |
@@ -279,7 +309,7 @@ Apresentar ao usuário **antes de criar as Issues**:
 - Ondas de execução : <N>
 - Paralelismo       : <ex: "Onda 1 pode ter 2 agentes simultâneos">
 
-✅ Confirma o plano? Responda "sim" para criar as Issues, ou descreva ajustes.
+▶️ Criação das Issues iniciada automaticamente. Se o usuário solicitar ajustes durante a execução, registrar na Discussion e atualizar/criar Issues conforme necessário.
 ```
 
 ### Regras de decomposição
@@ -305,6 +335,7 @@ Apresentar ao usuário **antes de criar as Issues**:
 
 > **Organização**: `https://dev.azure.com/LesteDevOps`
 > **Tipo**: `Issue` — nunca `Task`.
+> **Exceção obrigatória**: bug reportado pelo usuário deve ser `Bug`, nunca `Issue`. Seguir `ai_skills/workflows/bug_reporting.md`.
 > **Assign na criação**: `celeste@leste.com` (executora). Muda para `<NOME_REVISOR>` ao mover para Review.
 > **Tags obrigatórias**:
 > - Uma tag por **repositório afetado** (nome exato). N repositórios → N tags.
@@ -385,7 +416,7 @@ az devops work-item relation add \
 
 ### 2.6 Criar Test Cases vinculados às Issues
 
-Após criar as Issues e registrar dependências, criar Test Cases no Test Plan da Iteration trimestral:
+Após criar as Issues e registrar dependências, criar Test Cases no Test Plan da Iteration vigente:
 
 ```text
 Issue #<ID> → Test Case(s) #<ID_TEST_CASE>
@@ -398,6 +429,18 @@ Regras:
 - Registrar no comentário da Issue os IDs dos Test Cases criados.
 
 Seguir `ai_skills/workflows/test_plans.md` Passos 3 e 4.
+
+### 2.7 Criar Bug quando o usuário reportar falha
+
+Se o usuário reportar erro, bug, falha ou regressão sobre uma atividade recém-entregue:
+
+1. Criar imediatamente um work item do tipo `Bug`.
+2. Vincular o Bug à Issue original com `Related`, se a Issue original for identificável.
+3. Se a Issue original não for identificável, criar o Bug mesmo assim e registrar a origem como "não identificada".
+4. Adicionar comentário completo no Bug e na Issue original quando houver vínculo.
+5. Executar o Bug como qualquer item de desenvolvimento: `To Do` -> `Doing` -> `Review`.
+
+Seguir `ai_skills/workflows/bug_reporting.md`.
 
 ---
 
@@ -462,13 +505,18 @@ Backlog ──► To Do ──► Doing ──► Review
 ### Mover para Doing + Start DateTime exato
 ```bash
 START_DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")   # capturar no momento exato da transição
+ESTIMATED_DATETIME="<YYYY-MM-DDTHH:MM:SSZ>"       # estimativa atualizada da atividade
 
 az boards work-item update \
   --id <ID_ISSUE> \
   --org "https://dev.azure.com/LesteDevOps" \
   --state "Doing" \
-  --fields "Microsoft.VSTS.Scheduling.StartDate=$START_DATETIME"
+  --fields \
+    "Microsoft.VSTS.Scheduling.StartDate=$START_DATETIME" \
+    "Microsoft.VSTS.Scheduling.TargetDate=$ESTIMATED_DATETIME"
 ```
+
+> Se o processo Azure DevOps usar campo customizado para "Estimated Date", preencher esse campo além de `Microsoft.VSTS.Scheduling.TargetDate`. Se o campo não existir, registrar a estimativa na Discussion sem bloquear.
 
 ### Mover para Review + Finish DateTime + Campos de Revisão
 ```bash
@@ -487,6 +535,7 @@ az boards work-item update \
 ```
 
 > **Completed Work** = total de tokens consumidos (entrada + saída) em toda a execução da Issue.
+> `<NOME_REVISOR>` é sempre o usuário que solicitou a Issue/Bug. Detectar automaticamente por `az account show --query user.name -o tsv`; se a Issue trouxer outro solicitante explícito, usar esse solicitante.
 
 ---
 
@@ -506,16 +555,50 @@ az boards work-item update \
 4. **Sem perda entre CLI e Issue**: Antes de concluir, comparar os textos escritos pelo GitHub Copilot CLI durante a atividade com os comentários da Discussion e postar qualquer trecho ausente.
 5. **Mem├│ria vinculada**: Registrar no diário `./memory/{yyyy-MM-dd}.md` as IDs das Issues e os principais comentários da IA na CLI, indicando que o espelho integral foi publicado na Issue.
 
-### Comando padrão de comentário
-```bash
-COMMENT_DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+### Comando padrão de comentário multilinha
 
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## ⚙️ [$COMMENT_DATETIME] <Título da Etapa>
+Usar `System.History` via JSON Patch para preservar o comentário inteiro. **Não usar** `az boards work-item update --discussion` para conteúdo multilinha, pois ele pode cortar o texto na primeira linha dependendo do shell.
 
-<CONTEÚDO INTEGRAL exatamente como foi escrito no console — análise, código, outputs, decisões, logs>"
+```powershell
+function Add-WorkItemDiscussion {
+  param(
+    [Parameter(Mandatory=$true)][int]$WorkItemId,
+    [Parameter(Mandatory=$true)][string]$Title,
+    [Parameter(Mandatory=$true)][string]$Body
+  )
+
+  $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+  $history = "## [$timestamp] $Title`n`n$Body"
+  $payload = @(
+    @{
+      op = "add"
+      path = "/fields/System.History"
+      value = $history
+    }
+  ) | ConvertTo-Json -Depth 5
+
+  $tmp = New-TemporaryFile
+  Set-Content -Path $tmp -Value $payload -Encoding UTF8
+
+  az devops invoke `
+    --organization "https://dev.azure.com/LesteDevOps" `
+    --area wit `
+    --resource workitems `
+    --route-parameters id=$WorkItemId `
+    --api-version 7.1 `
+    --http-method PATCH `
+    --headers "Content-Type=application/json-patch+json" `
+    --in-file $tmp
+
+  Remove-Item $tmp -Force
+}
+
+Add-WorkItemDiscussion `
+  -WorkItemId <ID_ISSUE> `
+  -Title "<Título da Etapa>" `
+  -Body @"
+<CONTEÚDO INTEGRAL exatamente como foi escrito no console — análise, código, outputs, decisões, logs>
+"@
 ```
 
 ### Momentos obrigatórios de comentário
@@ -530,16 +613,16 @@ az boards work-item update \
 | 6 | Testes executados                 | Output completo dos testes (passou/falhou, cobertura, erros)        |
 | 7 | Commit/Push realizado             | Hash do commit, mensagem, branch, repositório de destino            |
 | 8 | Issue finalizada (→ Review)       | **Comentário de Encerramento** — template abaixo                    |
+| 9 | Bug reportado pelo usuário        | Criar Bug, comentário completo, relação com Issue original quando houver |
 
 > Se a atividade impactar múltiplas Issues, postar o texto integral em cada Issue relevante ou, quando o conteúdo for específico de uma Issue, postar no respectivo item e registrar a distribuição na memória.
 
 ### Template do Comentário de Encerramento (obrigatório ao mover para Review)
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## ✅ [$FINISH_DATETIME] Entrega Concluída — Resumo Final
-
+```powershell
+Add-WorkItemDiscussion `
+  -WorkItemId <ID_ISSUE> `
+  -Title "Entrega Concluída — Resumo Final" `
+  -Body @"
 ### O que foi implementado
 <Lista detalhada de TUDO que foi criado, modificado ou removido — sem omissões>
 
@@ -564,7 +647,8 @@ az boards work-item update \
 - **Reviewed By:** <NOME_REVISOR>
 
 ### Pendências para o Revisor
-<Listar itens ou escrever 'Nenhuma'>"
+<Listar itens ou escrever 'Nenhuma'>
+"@
 ```
 
 ---
@@ -574,421 +658,3 @@ az boards work-item update \
 Se `ESTE_PROJETO.Url` ou `PROJETO_IRMAO.Url` estiverem como `[MISSING]`:
 - **NÃO** criar Issues nem branches.
 - **PARAR** e solicitar que o usuário execute `setup-leste-ai.ps1` com os repositórios configurados.
-
-
----
-
-## 🔍 Passo 1 — Análise de Impacto por Projeto
-
-Para cada solicitação, a IA deve categorizar o impacto:
-
-| Tipo de Impacto       | Critério                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| **Backend apenas**    | Mudanças em API, banco de dados, regras de negócio, serviços, domínio ou infraestrutura.   |
-| **Frontend apenas**   | Mudanças em UI, componentes Vue, stores Pinia, serviços TypeScript ou rotas do cliente.    |
-| **Ambos (Full-Stack)**| Qualquer mudança que exija contrato de dados novo ou ajuste em endpoints já existentes.    |
-
-### Matriz de Decisão
-
-```
-Solicitação recebida
-       │
-       ├─ Envolve API / DB / Backend Logic?  ──► Criar Issue no BACKEND
-       │
-       ├─ Envolve UI / Componentes / Frontend Logic?  ──► Criar Issue no FRONTEND
-       │
-       └─ Envolve contrato de dados (DTO / Interface)?  ──► Criar Issues em AMBOS e vincular
-```
-
----
-
-## 📝 Passo 2 — Criação Obrigatória de Issues no Azure DevOps
-
-> **Organização**: `https://dev.azure.com/LesteDevOps`
-> **Tipo**: `Issue` — nunca `Task`.
-> **Assign**: `celeste@leste.com` — fixo, sem exceção.
-> **Tags obrigatórias**:
-> - Uma tag por **repositório afetado** (nome exato). Se a Issue tocar N repositórios, adicionar N tags.
-> - Uma tag de **contexto** que descreva a atividade com uma palavra-chave (ex: `CriacaoEndpoint`, `CorrecaoBug`, `RefatoracaoAuth`, `MigracaoSchema`, `AjusteLayout`). Deve ajudar a identificar o que foi feito sem abrir a Issue.
-
-### 2.1 Para o projeto Backend
-```bash
-# Capturar o ID retornado após criação
-ISSUE_ID=$(az boards work-item create \
-  --title "[BACKEND] <Título descritivo da issue>" \
-  --type "Issue" \
-  --project "<NOME_REPOSITORIO_BACKEND>" \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields \
-    "System.AreaPath=<NOME_REPOSITORIO_BACKEND>" \
-    "System.AssignedTo=celeste@leste.com" \
-    "System.Tags=Backend;<NOME_REPOSITORIO_BACKEND>;<PALAVRA_CONTEXTO>" \
-    "Microsoft.VSTS.Common.Activity=Development" \
-    "System.Description=<Descrição detalhada do escopo, critérios de aceite e dependências>" \
-  --query "id" -o tsv)
-
-# Mover imediatamente para To Do
-az boards work-item update \
-  --id $ISSUE_ID \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --state "To Do"
-```
-
-### 2.2 Para o projeto Frontend
-```bash
-ISSUE_ID=$(az boards work-item create \
-  --title "[FRONTEND] <Título descritivo da issue>" \
-  --type "Issue" \
-  --project "<NOME_REPOSITORIO_FRONTEND>" \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields \
-    "System.AreaPath=<NOME_REPOSITORIO_FRONTEND>" \
-    "System.AssignedTo=celeste@leste.com" \
-    "System.Tags=Frontend;<NOME_REPOSITORIO_FRONTEND>;<PALAVRA_CONTEXTO>" \
-    "Microsoft.VSTS.Common.Activity=Development" \
-    "System.Description=<Descrição detalhada do escopo, critérios de aceite e dependências>" \
-  --query "id" -o tsv)
-
-az boards work-item update \
-  --id $ISSUE_ID \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --state "To Do"
-```
-
-### 2.3 Issue tocando múltiplos repositórios (ex: pacote compartilhado + backend)
-Quando uma mesma Issue envolver mais de um repositório, acumular **todas** as tags de repositório:
-```bash
-"System.Tags=Backend;<REPO_1>;<REPO_2>;<REPO_3>;<PALAVRA_CONTEXTO>"
-```
-
-### 2.4 Vincular Issues (quando ambos os projetos são impactados)
-```bash
-az devops work-item relation add \
-  --id <ID_ISSUE_BACKEND> \
-  --target-id <ID_ISSUE_FRONTEND> \
-  --relation-type "Related" \
-  --org "https://dev.azure.com/LesteDevOps"
-```
-
----
-
-## 🌿 Passo 3 — Criação de Branch por Sessão
-
-Criar a branch de sessão imediatamente após as Issues — **sem aprovação**. Uma única branch é criada por sessão e reutilizada para todas as Issues do mesmo ciclo de trabalho.
-
-```bash
-# Definir a branch de sessão (executar UMA VEZ por sessão, por repositório)
-SESSION_DATE=$(date -u +"%Y%m%d")
-SESSION_USER=$(az account show --query "user.name" -o tsv 2>/dev/null | sed 's/@.*//')
-if [ -z "$SESSION_USER" ]; then
-  SESSION_USER=$(git config --global user.email 2>/dev/null | sed 's/@.*//')
-fi
-SESSION_CONTEXT="<contexto-kebab-case>" # Ver regra abaixo
-
-SESSION_BRANCH="session/${SESSION_DATE}-${SESSION_USER}-${SESSION_CONTEXT}"
-
-# Backend — criar se não existir, senão apenas mudar para ela
-git -C "<CAMINHO_BACKEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_BACKEND>" checkout $SESSION_BRANCH
-
-# Frontend — criar se não existir, senão apenas mudar para ela
-git -C "<CAMINHO_FRONTEND>" checkout -b $SESSION_BRANCH 2>/dev/null || git -C "<CAMINHO_FRONTEND>" checkout $SESSION_BRANCH
-```
-
-> **Formato do nome**: `session/<YYYYMMDD>-<LOGIN>-<contexto-kebab-case>`
->
-> | Parte        | Valor                                                                                       |
-> | ------------ | ------------------------------------------------------------------------------------------- |
-> | `<YYYYMMDD>` | Data atual no fuso UTC                                                                      |
-> | `<LOGIN>`    | Parte local do email do usuário logado (antes do `@`), detectada via `az account show` ou `git config user.email` |
-> | `<contexto>` | **Se o usuário especificou** um nome/contexto → usar exatamente o que foi informado (kebab-case). **Se não especificou** → a IA infere a partir das Issues da sessão (ex: `correcao-relatorios`, `integracao-pagamentos`) |
->
-> **Regra**: Armazenar `$SESSION_BRANCH` no início da sessão e reutilizar em todas as Issues seguintes.
-
----
-
-## 📣 Passo 4 — Resumo ao Usuário (sem pausa)
-
-A IA exibe o resumo e **inicia a implementação imediatamente**:
-
-```
-✅ Issues criadas — Implementação iniciada
-
-| Projeto   | Issue ID | Tags                                        | Assign              | Estado |
-|-----------|----------|---------------------------------------------|---------------------|--------|
-| Backend   | #XXXX    | Backend;<repo>;<contexto>                   | celeste@leste.com   | To Do  |
-| Frontend  | #YYYY    | Frontend;<repo>;<contexto>                  | celeste@leste.com   | To Do  |
-
-🔗 Issues vinculadas: #XXXX ↔ #YYYY
-🌿 Branches: feature/#XXXX-<desc> | feature/#YYYY-<desc>
-▶️  Movendo para Doing e iniciando implementação...
-```
-
----
-
-## 🔄 Passo 5 — Gestão do Ciclo de Estado da Issue
-
-O fluxo de estados é **sequencial e obrigatório**. A IA executa cada transição no momento certo:
-
-```
-Backlog ──► To Do ──► Doing ──► Review
-                                  └── Done (apenas humanos)
-```
-
-| Transição             | Quando ocorre                          | Comando                                                                                 |
-| --------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
-| `Backlog → To Do`     | Logo após criação da Issue             | `az boards work-item update --id <ID> --state "To Do" --org "https://dev.azure.com/LesteDevOps"` |
-| `To Do → Doing`       | Ao iniciar a implementação             | `az boards work-item update --id <ID> --state "Doing" --org "https://dev.azure.com/LesteDevOps"` + registrar **Start Date** |
-| `Doing → Review`      | Ao concluir toda a implementação       | `az boards work-item update --id <ID> --state "Review" --org "https://dev.azure.com/LesteDevOps"` + registrar **Finish Date** + **Completed Work** + comentário de encerramento |
-
-### Registrar Start Date (ao mover para Doing)
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields "Microsoft.VSTS.Scheduling.StartDate=<YYYY-MM-DD>"
-```
-
-### Registrar Finish Date e Completed Work (ao mover para Review)
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields \
-    "Microsoft.VSTS.Scheduling.FinishDate=<YYYY-MM-DD>" \
-    "Microsoft.VSTS.Scheduling.CompletedWork=<TOTAL_TOKENS_UTILIZADOS>"
-```
-
-> **Completed Work** = total de tokens consumidos durante toda a execução da Issue (entrada + saída).
-
----
-
-## 💬 Passo 6 — Discussion: Comentários Incrementais Obrigatórios
-
-> **MANDATO**: A cada nova etapa executada, a IA **DEVE** adicionar um novo comentário na Discussion da Issue. Nunca editar comentários anteriores — cada etapa é um registro imutável de evidência.
-
-### Comando padrão de comentário
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## ⚙️ [<YYYY-MM-DD HH:MM>] <Título da Etapa>
-
-**Ação:** <O que foi feito de forma objetiva>
-
-**Artefatos:**
-- <arquivo/caminho criado ou modificado>
-- <comando executado e seu output resumido>
-
-**Resultado:** <✅ Sucesso | ⚠️ Pendência | ❌ Falha>
-**Observações:** <Decisões técnicas, justificativas, logs relevantes>"
-```
-
-### Momentos obrigatórios de comentário
-
-| # | Momento                            | O que registrar                                                    |
-|---|------------------------------------|--------------------------------------------------------------------|
-| 1 | Issue criada (Backlog → To Do)     | Escopo identificado, projetos impactados, critérios de aceite      |
-| 2 | Implementação iniciada (→ Doing)   | Estratégia adotada, camadas/arquivos que serão tocados             |
-| 3 | Cada arquivo criado ou modificado  | Caminho, propósito e resumo da mudança                             |
-| 4 | Testes executados                  | Resultado completo (passou/falhou, cobertura)                      |
-| 5 | Commit/Push realizado              | Hash, mensagem do commit, branch e repositório de destino          |
-| 6 | Issue finalizada (→ Review)        | **Comentário de encerramento** — ver template abaixo               |
-
-### Template do Comentário de Encerramento (obrigatório ao mover para Review)
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## ✅ Entrega Concluída — Resumo Final
-
-**O que foi entregue:**
-- <Item 1 entregue>
-- <Item 2 entregue>
-
-**Repositórios alterados:**
-- <NOME_REPO>: branch `$SESSION_BRANCH` — commit `<HASH>`
-
-**Testes:** <Resultado final dos testes>
-
-**Tokens utilizados:** <TOTAL> (registrado em Completed Work)
-**Start Date:** <YYYY-MM-DD> | **Finish Date:** <YYYY-MM-DD>
-
-**Pendências / Observações para o Revisor:** <ou 'Nenhuma'>"
-```
-
----
-
-## 🛑 Condição de Bloqueio
-
-Se as URLs do Azure DevOps (`ESTE_PROJETO.Url` ou `PROJETO_IRMAO.Url`) estiverem como `[MISSING]`:
-- **NÃO** criar Issues nem branches.
-- **PARAR** e solicitar ao usuário que execute `setup-leste-ai.ps1` com os repositórios configurados.
-
-
-Para cada solicitação, a IA deve categorizar o impacto:
-
-| Tipo de Impacto       | Critério                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| **Backend apenas**    | Mudanças em API, banco de dados, regras de negócio, serviços, domínio ou infraestrutura.   |
-| **Frontend apenas**   | Mudanças em UI, componentes Vue, stores Pinia, serviços TypeScript ou rotas do cliente.    |
-| **Ambos (Full-Stack)**| Qualquer mudança que exija contrato de dados novo ou ajuste em endpoints já existentes.    |
-
-### Matriz de Decisão
-
-```
-Solicitação recebida
-       │
-       ├─ Envolve API / DB / Backend Logic?  ──► Criar Issue no BACKEND
-       │
-       ├─ Envolve UI / Componentes / Frontend Logic?  ──► Criar Issue no FRONTEND
-       │
-       └─ Envolve contrato de dados (DTO / Interface)?  ──► Criar Issues em AMBOS e vincular
-```
-
----
-
-## 📝 Passo 2 — Criação Obrigatória de Issues no Azure DevOps
-
-> **Organização Azure DevOps**: `https://dev.azure.com/LesteDevOps`
-> O nome do projeto (`--project`) é o **nome exato da pasta/repositório** do projeto no Azure DevOps.
-> **Tipo obrigatório**: `Issue` (não Task).
-> **Responsável fixo**: `celeste@leste.com` — toda Issue deve ser assigned a este usuário.
-> **Tag de repositório**: Toda Issue deve conter uma tag com o **nome exato do repositório** de destino.
-
-### 2.1 Para o projeto impactado (Backend)
-```bash
-az boards work-item create \
-  --title "[BACKEND] <Título descritivo da issue>" \
-  --type "Issue" \
-  --project "<NOME_REPOSITORIO_BACKEND>" \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields \
-    "System.AreaPath=<NOME_REPOSITORIO_BACKEND>" \
-    "System.AssignedTo=celeste@leste.com" \
-    "System.Tags=Backend;<NOME_REPOSITORIO_BACKEND>;<TAG_FEATURE>" \
-    "Microsoft.VSTS.Common.Activity=Development" \
-    "System.Description=<Descrição detalhada do que precisa ser feito no Backend>"
-```
-
-### 2.2 Para o projeto impactado (Frontend)
-```bash
-az boards work-item create \
-  --title "[FRONTEND] <Título descritivo da issue>" \
-  --type "Issue" \
-  --project "<NOME_REPOSITORIO_FRONTEND>" \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --fields \
-    "System.AreaPath=<NOME_REPOSITORIO_FRONTEND>" \
-    "System.AssignedTo=celeste@leste.com" \
-    "System.Tags=Frontend;<NOME_REPOSITORIO_FRONTEND>;<TAG_FEATURE>" \
-    "Microsoft.VSTS.Common.Activity=Development" \
-    "System.Description=<Descrição detalhada do que precisa ser feito no Frontend>"
-```
-
-### 2.3 Vincular Issues (quando ambos os projetos são impactados)
-```bash
-az devops work-item relation add \
-  --id <ID_ISSUE_BACKEND> \
-  --target-id <ID_ISSUE_FRONTEND> \
-  --relation-type "Related" \
-  --org "https://dev.azure.com/LesteDevOps"
-```
-
----
-
-## 🌿 Passo 3 — Criação de Branches por Projeto
-
-Após criar as Issues, criar a branch em cada projeto impactado:
-
-```bash
-# No projeto Backend
-git checkout -b feature/<ID_ISSUE_BACKEND>-<descricao-kebab-case>
-
-# No projeto Frontend
-git checkout -b feature/<ID_ISSUE_FRONTEND>-<descricao-kebab-case>
-```
-
----
-
-## 📣 Passo 4 — Confirmação ao Usuário
-
-A IA **DEVE** apresentar um resumo e **já iniciar a implementação** sem aguardar confirmação:
-
-```
-✅ Análise de Impacto Concluída — Iniciando automaticamente
-
-| Projeto   | Issue ID | Título                           | Assign              | Estado   |
-|-----------|----------|----------------------------------|---------------------|----------|
-| Backend   | #XXXX    | [BACKEND] <título>              | celeste@leste.com   | Doing    |
-| Frontend  | #YYYY    | [FRONTEND] <título>             | celeste@leste.com   | Doing    |
-
-🏷️  Tags: Backend;<NOME_REPOSITORIO_BACKEND> | Frontend;<NOME_REPOSITORIO_FRONTEND>
-🔗  Issues vinculadas: #XXXX ↔ #YYYY
-🌿  Branches criadas: feature/#XXXX-<desc> | feature/#YYYY-<desc>
-
-▶️  Implementação iniciada...
-```
-
----
-
-## 💬 Passo 5 — Discussion: Registro Incremental de Evidências
-
-> **MANDATO**: Toda ação executada associada a uma Issue **DEVE** ser registrada na seção `Discussion` da Issue correspondente no Azure DevOps, de forma **incremental** e com objetivo de **gerar evidências auditáveis**.
-
-### Regras de Registro na Discussion
-
-1. **Incremental**: Cada etapa concluída gera um novo comentário. Não editar comentários anteriores.
-2. **Conteúdo Obrigatório por Comentário**:
-   - 📌 **Momento**: O que foi feito (ex: "Branch criada", "Endpoint implementado", "Testes executados").
-   - 🧱 **Artefatos**: Arquivos criados/modificados, comandos executados, outputs relevantes.
-   - ✅ **Resultado**: Sucesso, falha ou pendência com justificativa.
-   - ⏱️ **Timestamp**: Data/hora da ação.
-
-### Comando para adicionar comentário na Discussion
-```bash
-az boards work-item update \
-  --id <ID_ISSUE> \
-  --org "https://dev.azure.com/LesteDevOps" \
-  --discussion "## [<TIMESTAMP>] <Título da Etapa>
-
-**Ação realizada:** <Descrição objetiva do que foi feito>
-
-**Artefatos:**
-- <arquivo ou comando 1>
-- <arquivo ou comando 2>
-
-**Resultado:** <Sucesso / Falha / Pendência>
-
-**Observações:** <Justificativas técnicas, decisões tomadas, logs relevantes>"
-```
-
-### Momentos Obrigatórios de Registro na Discussion
-
-| Momento                              | Comentário esperado                                               |
-| ------------------------------------ | ----------------------------------------------------------------- |
-| Issue criada                         | Descrição do impacto identificado e escopo da mudança            |
-| Branch criada                        | Nome da branch e projeto de destino                              |
-| Início da implementação              | Arquivos/camadas envolvidos e estratégia adotada                 |
-| Cada arquivo criado ou modificado    | Caminho, motivo e resumo da mudança                              |
-| Testes executados                    | Resultado dos testes (output completo ou resumo)                 |
-| Commit/Push realizado                | Hash do commit, mensagem e branch de destino                     |
-| Issue movida para Review             | Checklist de finalização preenchido                              |
-
----
-
-## 🛑 Condição de Bloqueio
-
-Se as URLs do Azure DevOps (`ESTE_PROJETO.Url` ou `PROJETO_IRMAO.Url`) estiverem como `[MISSING]`:
-- **NÃO** criar issues nem branches.
-- **PARAR** e solicitar ao usuário que execute `setup-leste-ai.ps1` com os repositórios configurados corretamente.
-
----
-
-## ♻️ Atualização de Estado Durante a Execução
-
-| Momento                        | Ação no Azure DevOps                                                     |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| Início da implementação        | Mover Issue para **Doing** + registrar comentário na Discussion          |
-| Cada entrega parcial           | Registrar comentário incremental na Discussion com evidências            |
-| Implementação concluída        | Mover Issue para **Review** + preencher `Completed Work` e `Finish Date` + comentário final na Discussion |
-| A IA **NUNCA** move para Done  | Este estado é exclusivo de validação humana                              |

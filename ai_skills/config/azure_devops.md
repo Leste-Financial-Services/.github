@@ -33,6 +33,7 @@ Rules:
 az devops configure --defaults organization=https://dev.azure.com/LesteDevOps project=<ProjectName>
 az account show --query user.name -o tsv
 az boards work-item create --organization https://dev.azure.com/LesteDevOps --project <ProjectName> --type Issue --title "<Title>" --assigned-to "<LoggedUserUPN>"
+az boards work-item create --organization https://dev.azure.com/LesteDevOps --project <ProjectName> --type Bug --title "[BUG] <Title>" --assigned-to "celeste@leste.com"
 az boards work-item relation add --organization https://dev.azure.com/LesteDevOps --id <SourceId> --target-id <TargetId> --relation-type Related
 az boards work-item update --organization https://dev.azure.com/LesteDevOps --id <IssueId> --fields "System.Tags=<Tag1>; <Tag2>" "System.AssignedTo=<LoggedUserUPN>"
 ```
@@ -48,6 +49,7 @@ When creating or organizing an Issue:
 5. If the current user lacks permission to update the Board/process, document the missing stages in the Issue discussion and ask a project/process administrator to add them.
 6. Do not delete or rename existing Board stages without explicit user approval.
 7. Keep the default lifecycle aligned with `Backlog`, `ToDo`, `Doing`, `Review`, `Done`, and add only the extra stages needed by the Issue workflow.
+8. Creating work items, moving states, assigning Iteration, and posting Discussion updates do not require user permission. Run this control work in a separate workstream/agent when available so implementation can proceed in parallel after the required IDs are known.
 
 ## Done and Main Promotion Gate
 
@@ -80,19 +82,31 @@ When creating or organizing an Issue:
 
 ## Issue Ownership, Tags, and Work Accounting
 
-1. Always create or use work item type **Issue**. This is the mandatory work item type for Leste development tracking.
-2. Every Issue must be assigned to the currently logged-in user.
-   - Resolve the user with `az account show --query user.name -o tsv`.
-   - Set `System.AssignedTo` / `--assigned-to` to that logged user.
-3. Every Issue must have 1 to 3 category tags that describe the work.
+1. Always create or use work item type **Issue** for development requests. When the user reports a defect, regression, error, or failed validation, create work item type **Bug** instead.
+2. Every new Issue/Bug must be assigned to `celeste@leste.com` while it is in execution.
+   - Resolve the requester/reviewer with `az account show --query user.name -o tsv`, or use the explicit requester recorded on the item.
+   - When moving to `Review`, set `System.AssignedTo` and `Reviewed By` to that requester/reviewer.
+3. Every Issue/Bug must have 1 to 3 category tags that describe the work.
    - Choose from the activity and technology context; examples: `Backend`, `Frontend`, `API`, `MCP`, `IA`, `C#`, `Python`, `VUE.JS`, `REACT`, `Javascript`, `Management`, `PMO`, `Skill`, `C++`, `C`, `Mobile`, `Responsive`, `SQL`, `AzureDevOps`, `Azure`, `Security`, `Documentation`.
    - Use no fewer than 1 and no more than 3 tags unless the user explicitly overrides.
 4. At the start, fill the estimate before implementation begins.
    - Prefer the Azure DevOps scheduling field used by the process, usually `Microsoft.VSTS.Scheduling.Effort`.
    - If the field is unavailable, write the estimate in the Issue description or first discussion comment.
-5. At completion, fill actual time spent.
+5. Keep dates updated throughout the lifecycle.
+   - Fill `Microsoft.VSTS.Scheduling.StartDate` when the item enters `Doing`.
+   - Fill/update the process field for Estimated Date; prefer `Microsoft.VSTS.Scheduling.TargetDate`, or the project's custom "Estimated Date" field when available.
+   - Update Estimated Date whenever scope or forecast changes.
+6. At completion, fill actual time spent.
    - Prefer `Microsoft.VSTS.Scheduling.CompletedWork` and `Microsoft.VSTS.Scheduling.FinishDate` when available.
    - If a field is unavailable, write the value in the Issue discussion.
+
+## Bug Work Items
+
+1. If the user reports a bug in a just-completed or in-progress AI activity, create a **Bug** work item immediately.
+2. If the original Issue can be identified from the active session, branch, commits, logs, or user text, link the Bug to it with `Related`.
+3. If the original Issue cannot be identified, still create the Bug and note that the source Issue is unknown.
+4. Add a complete Discussion comment to both the Bug and the original Issue when linked.
+5. Bug fixes must use commits containing `AB#<BugId>`; if related to an original Issue, include both IDs.
 
 ## Issue Discussion Log
 
@@ -105,5 +119,14 @@ When creating or organizing an Issue:
    - commands run;
    - important command outputs, errors, validations, and fixes;
    - files changed and why.
-4. At the end, copy the local log content into the Issue discussion as one or more comments.
-5. If the Azure DevOps CLI or permissions prevent adding comments, keep the local file and explicitly tell the user that the Issue discussion still needs synchronization.
+4. Post Discussion updates incrementally as the work progresses, not only at the end.
+5. For multiline comments, update `/fields/System.History` through Azure DevOps JSON Patch. Do not rely on single-line shell arguments that can cut the comment at the first newline.
+6. At the end, copy any remaining local log content into the Issue discussion as one or more comments.
+7. If the Azure DevOps CLI or permissions prevent adding comments, keep the local file and explicitly tell the user that the Issue discussion still needs synchronization.
+
+## Commit Linking
+
+1. Every commit that changes implementation for an Issue or Bug must include Azure Boards references in the message: `AB#<ID>`.
+2. If one commit touches multiple work items, include every affected ID, for example: `AB#123 AB#456`.
+3. Do not use only `#<ID>` for Azure DevOps linking; it is insufficient for reliable commit association.
+4. After committing/pushing, add a Discussion comment with commit hash, branch, repository, message, and linked work item IDs.

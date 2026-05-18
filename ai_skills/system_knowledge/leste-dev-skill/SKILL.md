@@ -40,15 +40,16 @@ Always follow `ai_skills/workflows/token_efficient_context.md`.
 2. Check `config/stack_preferences.md`.
 3. Check `ai_skills/project_knowledge/leste_projects_index.md` to find existing code that may already satisfy the demand.
 4. If the central index shows a likely match, read that repository's `project_knowledge/README.md` and only the relevant detail file.
-5. Create/link Azure DevOps issue before code changes when operating under Leste project rules.
+5. Create/link Azure DevOps work item before code changes when operating under Leste project rules.
    - Organization: `https://dev.azure.com/LesteDevOps`.
    - Auth: use current user credentials via `az login`; never store or request secrets.
-   - Always use work item type **Issue** as the mandatory Leste development work item.
-   - Assign the Issue to the currently logged-in user from `az account show --query user.name -o tsv`.
+   - Use work item type **Issue** for development requests.
+   - Use work item type **Bug** when the user reports an error, defect, failed validation, or regression; link it to the original Issue when identifiable, otherwise create it standalone.
+   - Assign new development Issues/Bugs to `celeste@leste.com`; when moving to Review, assign/review by the requester detected from `az account show --query user.name -o tsv` or the explicit requester on the item.
    - Add 1 to 3 category tags based on the activity/technology, for example `Backend`, `Frontend`, `API`, `MCP`, `IA`, `C#`, `Python`, `VUE.JS`, `REACT`, `Javascript`, `Management`, `PMO`, `Skill`, `C++`, `C`, `Mobile`, `Responsive`, `SQL`.
-   - Fill the initial estimate/Effort before implementation starts.
+   - Fill the initial estimate/Effort and Estimated Date before implementation starts; keep Start Date and Estimated Date updated.
    - Create a local non-committed `ISSUE-<id>-discussion.md` log and append user responses, assistant steps, commands, important outputs, validations, files changed, and final summary as the CLI session progresses.
-   - At completion, fill actual time spent/Completed Work and Finish Date, then copy the local log into the Issue Discussion as one or more comments.
+   - Post complete incremental Discussion comments while work progresses using the JSON Patch/System.History helper for multiline text. At completion, fill actual time spent/Completed Work and Finish Date, then copy any remaining local log into the Discussion.
 6. Check whether the Azure DevOps Board can represent the planned Issue workflow.
    - Identify stages planned for the Issue from the request, acceptance criteria, checklist, subtasks, or linked work items.
    - If the Board does not have columns/states for those stages, organize the Board so the Issue can be tracked through them.
@@ -78,7 +79,7 @@ Always follow `ai_skills/workflows/token_efficient_context.md`.
    - Before creating commits, pushing the branch, opening/updating PRs, merging/rebasing, or promoting to `main`, run `git fetch` and check whether the current branch is behind `origin/main` or its upstream.
    - If the branch is behind, stop and ask the user what to do: rebase, merge `main`, pull/fast-forward, create a new branch from current `main`, or continue without updating.
    - Do not create commits, push branches, open/update PRs, merge, or advance `main` from a behind/outdated branch without explicit user decision.
-   - At completion, always commit and push the working branch to the remote.
+   - At completion, always commit and push the working branch to the remote. Commit messages must include `AB#<ID>` for every affected Issue/Bug so Azure Boards links the commit.
    - Push/merge to `main` is allowed only for activities whose Issue is already in `Done`.
    - If the Issue is still in `Review`, ask whether an authorized user reviewed and wants the AI to move it from `Review` to `Done`.
    - Only `christian.novaes` and `marcio.chicarino` may authorize `Review` -> `Done`; normalize the requester/login to lowercase and accept either short user or `@leste.com` UPN.

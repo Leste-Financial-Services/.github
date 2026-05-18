@@ -14,9 +14,11 @@ Define o processo de raciocínio lógico que a IA deve seguir para cada solicita
 > - Pular a criação de Issues "para agilizar" ou "ir direto ao ponto"
 > - Criar Issues apenas se o usuário pedir explicitamente
 > - Mover Issues apenas se o usuário pedir explicitamente
+> - Deixar bug reportado pelo usuário sem work item `Bug`
 >
 > ### ✅ Comportamento CORRETO
 > - Ao receber qualquer solicitação de desenvolvimento: **criar as Issues imediatamente**, sem perguntar.
+> - Ao receber bug/erro/falha/regressão reportado pelo usuário: **criar Bug imediatamente**, vincular à Issue original quando identificável, sem perguntar.
 > - Ao iniciar a implementação de uma Issue: **mover para `Doing` imediatamente**, sem perguntar.
 > - Ao concluir a implementação de uma Issue: **mover para `Review` imediatamente**, sem perguntar.
 
@@ -25,7 +27,7 @@ Se o usuário solicitar execução de Issues já existentes (ex: "execute a Issu
 
 ### Criação de novas Issues (fluxo padrão)
 1. Executar **Passo 0** de `ai_skills/workflows/backlog_management.md` — consultar Issues abertas em `To Do` e perguntar se alguma deve ser incluída na sessão.
-2. Executar **Passo 0.5** de `ai_skills/workflows/backlog_management.md` — criar/atualizar a Iteration trimestral `YYYY.QN` e mover Issues em `Backlog`/`To Do` para ela, sem perguntar.
+2. Executar **Passo 0.5** de `ai_skills/workflows/backlog_management.md` — selecionar a Iteration vigente pela data atual ou criar fallback trimestral `YYYY.QN`, e mover Issues/Bugs em `Backlog`/`To Do` para ela, sem perguntar.
 3. Executar **Passo 0.6** de `ai_skills/workflows/backlog_management.md` — criar/reutilizar o Test Plan da Iteration e suites necessárias.
 4. Executar o restante do workflow `ai_skills/workflows/backlog_management.md` na íntegra.
 5. Identificar quais projetos são impactados: **Backend**, **Frontend** ou **Ambos**.
@@ -35,6 +37,9 @@ Se o usuário solicitar execução de Issues já existentes (ex: "execute a Issu
 9. Criar a(s) branch(es) em cada projeto impactado — **imediatamente, sem aguardar confirmação**.
 10. Vincular as Issues entre projetos quando ambos forem impactados.
 11. Apresentar o resumo ao usuário e iniciar a implementação.
+
+### Criação de Bugs (fluxo obrigatório)
+Se o usuário reportar bug/erro/falha/regressão em atividade executada ou recém-entregue, **não tratar como comentário solto**: seguir `ai_skills/workflows/bug_reporting.md`.
 
 > **Bloqueio**: Se não houver URL de Azure DevOps configurada (`[MISSING]`), interromper e solicitar configuração.
 
